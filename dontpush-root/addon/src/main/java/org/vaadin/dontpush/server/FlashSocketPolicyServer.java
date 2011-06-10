@@ -2,6 +2,7 @@ package org.vaadin.dontpush.server;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 /**
  * TODO modify this grant access only to the right port
@@ -21,10 +22,10 @@ public class FlashSocketPolicyServer extends Thread {
 	public void run() {
 		try {
 			ServerSocket serverSocket = new ServerSocket(843);
-			System.out.println("Policy server running");
+			Logger.getAnonymousLogger().info("Policy server running");
 			while (true) {
 				Socket socket = serverSocket.accept();
-				System.out.println("Policy request received");
+				Logger.getAnonymousLogger().info("Policy request received");
 				FlashSocketPolicyServerResponse tread = new FlashSocketPolicyServerResponse(
 						socket);
 				tread.start();
