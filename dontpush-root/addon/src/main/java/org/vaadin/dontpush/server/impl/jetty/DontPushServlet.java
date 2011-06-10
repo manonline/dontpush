@@ -49,8 +49,6 @@ import com.vaadin.ui.Window;
  * TODO check if here is something generic for abstract super class among
  * various app servers. Or better yet, detect if we could use same servlet for
  * all servers and create app server specific parts dynamically.
- * <p>
- * TODO proper logging instead of sysouts
  * 
  * @author mattitahvonen
  */
