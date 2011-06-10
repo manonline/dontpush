@@ -54,7 +54,7 @@ import com.vaadin.ui.Window;
  * 
  * @author mattitahvonen
  */
-public class DontPushServlet extends ApplicationServlet implements Callback,
+public class DontPushServlet extends ApplicationServlet implements
 		WebSocketFactory.Acceptor {
 
 	private WebSocketFactory _websocketFactory;
@@ -87,6 +87,26 @@ public class DontPushServlet extends ApplicationServlet implements Callback,
 		private Application app;
 		private SocketCommunicationManager cm;
 		private Window window;
+		private Callback callBack = new Callback() {
+
+			public void criticalNotification(Request request,
+					Response response, String cap, String msg, String details,
+					String outOfSyncURL) throws IOException {
+				// TODO Auto-generated method stub
+
+			}
+
+			public String getRequestPathInfo(Request request) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public InputStream getThemeResourceAsStream(String themeName,
+					String resource) throws IOException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		};
 
 		public VaadinWebSocketImpl(Application existingApplication,
 				CommunicationManager applicationManager) {
@@ -101,7 +121,7 @@ public class DontPushServlet extends ApplicationServlet implements Callback,
 				throws PaintException, IOException {
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
 			PrintWriter out = new PrintWriter(os);
-			cm.writeUidlResponce(DontPushServlet.this, repaintAll, out, window,
+			cm.writeUidlResponce(callBack, repaintAll, out, window,
 					analyzeLayouts);
 			out.flush();
 			out.close();
@@ -147,22 +167,6 @@ public class DontPushServlet extends ApplicationServlet implements Callback,
 			}
 		}
 
-	}
-
-	public void criticalNotification(Request request, Response response,
-			String cap, String msg, String details, String outOfSyncURL)
-			throws IOException {
-		this.criticalNotification(request, response, cap, msg, details,
-				outOfSyncURL);
-	}
-
-	public String getRequestPathInfo(Request request) {
-		return this.getRequestPathInfo(request);
-	}
-
-	public InputStream getThemeResourceAsStream(String themeName,
-			String resource) throws IOException {
-		return this.getThemeResourceAsStream(themeName, resource);
 	}
 
 	@Override
