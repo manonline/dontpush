@@ -39,6 +39,12 @@ public class SocketApplicationConnection extends ApplicationConnection {
 	private WebSocketListener _cb = new WebSocketListener() {
 
 		public void message(String message) {
+			if(!ownRequestPending) {
+				startRequest();
+				VConsole.log("Changeset pushed by the server");
+			} else {
+				ownRequestPending = false;
+			}
 			final Date start = new Date();
 			message = "{" + message + "}";
 			VConsole.log("Received socket message:");
@@ -68,6 +74,8 @@ public class SocketApplicationConnection extends ApplicationConnection {
 			}
 		}
 	};
+
+	private boolean ownRequestPending;
 
 	@Override
 	public void init(WidgetSet widgetSet, ApplicationConfiguration cnf) {
@@ -110,6 +118,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 			super.makeUidlRequest(requestData, extraParams, forceSync);
 		} else {
 			startRequest();
+			ownRequestPending = true;
 			getWebSocket().send(extraParams + "#" + requestData);
 		}
 	}
