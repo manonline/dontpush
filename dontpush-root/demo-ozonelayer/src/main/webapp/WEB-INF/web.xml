@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 	<display-name>Add-on Demo Application</display-name>
+
+	<!-- This setup tested to work with Jetty 8, Tomcat 7 and Glassfish 3.1.1, 
+		refer to atmosphere docs if you need some other setup to work. -->
+
 	<context-param>
 		<description>Vaadin production mode</description>
 		<param-name>productionMode</param-name>
@@ -38,7 +42,7 @@
 			<param-value>org.vaadin.dontpush.demo.gwt.DontPushDemoWidgetset</param-value>
 		</init-param>
 		<load-on-startup>2</load-on-startup>
-		
+
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
