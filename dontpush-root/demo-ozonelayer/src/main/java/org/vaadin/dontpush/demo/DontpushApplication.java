@@ -17,7 +17,7 @@ public class DontpushApplication extends Application {
 	@Override
 	public void init() {
 		Window main = new Window("Dontpush Application");
-		Label label = new Label("Hello Vaadin user");
+		Label label = new Label("Hello Vaadin user. This is a demo app for Atmosphere powered DontPush implementation.");
 		main.addComponent(label);
 		setMainWindow(main);
         final ProgressIndicator progressIndicator = new ProgressIndicator();
