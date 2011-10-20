@@ -1,10 +1,19 @@
 package org.vaadin.dontpush.demo;
 
+import java.util.Date;
+import java.util.HashSet;
+
 import com.vaadin.Application;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Button.ClickEvent;
 
 public class DontpushApplication extends Application {
+	
+	public static HashSet<DontpushApplication> openApps = new HashSet<DontpushApplication>();
+	
+	private Label label2;
+	private CssLayout messages;
+
 	@Override
 	public void init() {
 		Window main = new Window("Dontpush Application");
@@ -55,7 +64,74 @@ public class DontpushApplication extends Application {
         };
 
         thread.start();
+        
+        messages = new CssLayout();
+        messages.setWidth("600px");
+        
+        final TextField textField = new TextField("Post message");
+        
+        Button button = new Button("Post to all users");
+        
+        button.addListener(new Button.ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				String msg = (String) textField.getValue();
+				broadcast(msg);
+			}
+		});
+        
+        main.addComponent(textField);
+        main.addComponent(button);
+        main.addComponent(messages);
+        
+        register(this);
 
 	}
+	
+	
+	@Override
+	public void close() {
+		super.close();
+		unregister(this);
+	}
+	
+	static void register(DontpushApplication app) {
+		synchronized (openApps) {
+			openApps.add(app);
+		}
+	}
+	
+	static void unregister(DontpushApplication app) {
+		synchronized (openApps) {
+			openApps.remove(app);
+		}
+	}
+	
+	static void broadcast(String msg) {
+		DontpushApplication[] apps;
+		synchronized (openApps) {
+			apps = new DontpushApplication[openApps.size()];
+			openApps.toArray(apps);
+		}
+		for (int i = 0; i < apps.length; i++) {
+			DontpushApplication app = apps[i];
+			synchronized (app) {
+				app.addMessage(msg);
+			}
+		}
+	}
+
+
+	private void addMessage(String msg) {
+		messages.addComponent(new Label(new Date() + " New message:" + msg));
+		if(messages.getComponentCount() > 4) {
+			messages.removeComponent(messages.getComponentIterator().next());
+		}
+	}
+	
+	
+
+	
 
 }
