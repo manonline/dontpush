@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
 
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.DefaultBroadcaster;
@@ -38,8 +40,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 		HttpSession session = resource.getSession(false);
 		if (session != null) {
 			/*
-			 * TODO clean broadcasters when session dies 
-			 * 
 			 * TODO check and handle
 			 * possible timing issues when renewing the "Socket" with long
 			 * polling. Currently changes can get lost if server side change exactly when socket is renewed?
@@ -47,10 +47,15 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
 			String path = resource.getRequest().getPathInfo();
 			String windowName = path.substring(path.lastIndexOf("/"));
+			String key = "dontpush-" + session.getId() + "-" + windowName;
 			Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
 					DefaultBroadcaster.class,
-					"dontpush-" + session.getId() + "-" + windowName, true);
+					key , true);
 			resource.getAtmosphereResource().setBroadcaster(bc);
+
+			if(session.getAttribute(key) == null) {
+				session.setAttribute(key, new BroadcasterCleaner(key));
+			}
 
 			SocketCommunicationManager cm = (SocketCommunicationManager) session
 					.getAttribute(SocketCommunicationManager.class.getName());
@@ -75,6 +80,28 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 	public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
 		Logger.getLogger(getClass().getName()).severe(
 				"TODO Never happens in our case?");
+	}
+	
+	static class BroadcasterCleaner implements HttpSessionBindingListener {
+
+		private String key;
+
+		public BroadcasterCleaner(String key) {
+			this.key = key;
+		}
+
+		public void valueBound(HttpSessionBindingEvent event) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void valueUnbound(HttpSessionBindingEvent event) {
+			Broadcaster lookup = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, false);
+			if(lookup != null) {
+				DefaultBroadcasterFactory.getDefault().remove(lookup, key);
+			}
+		}
+		
 	}
 
 }
