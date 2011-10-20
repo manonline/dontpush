@@ -124,8 +124,8 @@
 					<hostedWebapp>${project.build.directory}/${project.build.finalName}</hostedWebapp>
 					<noServer>true</noServer>
 					<compileReport>false</compileReport>
-					<draftCompile>true</draftCompile>
-					<style>PRETTY</style>
+<!-- 					<draftCompile>true</draftCompile> -->
+<!-- 					<style>PRETTY</style> -->
 				</configuration>
 				<executions>
 					<execution>
