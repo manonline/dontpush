@@ -16,15 +16,7 @@
 
 package org.vaadin.dontpush.widgetset.client;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-
-import org.atmosphere.gwt.client.AtmosphereClient;
-import org.atmosphere.gwt.client.AtmosphereListener;
-
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.Cookies;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.BrowserInfo;
@@ -32,9 +24,16 @@ import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 import com.vaadin.terminal.gwt.client.WidgetSet;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+import org.atmosphere.gwt.client.AtmosphereClient;
+import org.atmosphere.gwt.client.AtmosphereListener;
+
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- * 
+ *
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -124,8 +123,8 @@ public class SocketApplicationConnection extends ApplicationConnection {
 				url = protoAndHost + url;
 			}
 
-			String cookie = Cookies.getCookie("JSESSIONID");
-			url += cookie + "/" + getConfiguration().getInitialWindowName();
+			/*String cookie = Cookies.getCookie("JSESSIONID");
+			url += cookie + "/" + getConfiguration().getInitialWindowName();*/
 			VConsole.log(url);
 
 			boolean webkit = BrowserInfo.get().isWebkit();
