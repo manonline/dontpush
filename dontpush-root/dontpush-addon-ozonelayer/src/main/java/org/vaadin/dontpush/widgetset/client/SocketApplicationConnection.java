@@ -17,6 +17,7 @@
 package org.vaadin.dontpush.widgetset.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Cookies;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.BrowserInfo;
@@ -39,6 +40,7 @@ import org.atmosphere.gwt.client.AtmosphereListener;
 public class SocketApplicationConnection extends ApplicationConnection {
 
     private AtmosphereClient ws;
+    private boolean ownRequestPending;
 
     private AtmosphereListener _cb = new AtmosphereListener() {
 
@@ -102,8 +104,6 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
     };
 
-    private boolean ownRequestPending;
-
     @Override
     public void init(WidgetSet widgetSet, ApplicationConfiguration cnf) {
         super.init(widgetSet, cnf);
@@ -112,7 +112,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
     }
 
     private AtmosphereClient getWebSocket() {
-        if (ws == null) {
+        if (this.ws == null) {
             // if timed out or not started, create websocket to server
             String url = getConfiguration().getApplicationUri() + "UIDL/";
             if(url.startsWith("/")) {
@@ -123,8 +123,8 @@ public class SocketApplicationConnection extends ApplicationConnection {
                 url = protoAndHost + url;
             }
 
-            /*String cookie = Cookies.getCookie("JSESSIONID");
-            url += cookie + "/" + getConfiguration().getInitialWindowName();*/
+            String cookie = Cookies.getCookie("JSESSIONID");
+            url += cookie + "/" + getConfiguration().getInitialWindowName();
             VConsole.log(url);
 
             boolean webkit = BrowserInfo.get().isWebkit();
@@ -133,11 +133,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
              * Ask atmosphere guys to fix this. Automatic degrading from
              * websockets don't work.
              */
-            ws = new AtmosphereClient(url, null, _cb, webkit);
+            this.ws = new AtmosphereClient(url, null, _cb, webkit);
             VConsole.log("...starting...");
-            ws.start();
+            this.ws.start();
         }
-        return ws;
+        return this.ws;
     }
 
     @Override
@@ -149,8 +149,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
     }
 
     @Override
-    protected void makeUidlRequest(String requestData, String extraParams,
-            boolean forceSync) {
+    protected void makeUidlRequest(String requestData, String extraParams, boolean forceSync) {
         VConsole.log("new Socket message: " + requestData);
         if (forceSync) {
             /*
@@ -159,7 +158,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             super.makeUidlRequest(requestData, extraParams, forceSync);
         } else {
             startRequest();
-            ownRequestPending = true;
+            this.ownRequestPending = true;
             getWebSocket().broadcast(extraParams + "#" + requestData);
         }
     }
