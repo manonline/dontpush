@@ -46,6 +46,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
         if (mgr == null) {
             // Creates new manager
             mgr = new SocketCommunicationManager(application);
+            this.session.setAttribute(SocketCommunicationManager.class.getName(), mgr);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }
         return mgr;
