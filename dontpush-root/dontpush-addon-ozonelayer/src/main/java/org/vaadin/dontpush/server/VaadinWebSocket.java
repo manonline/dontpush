@@ -28,6 +28,6 @@ import java.io.IOException;
  */
 public interface VaadinWebSocket {
 
-	void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws PaintException, IOException;
+    void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws PaintException, IOException;
 
 }

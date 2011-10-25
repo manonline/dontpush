@@ -37,88 +37,88 @@ import org.atmosphere.gwt.server.GwtAtmosphereResource;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
-	@Override
-	public void broadcast(Serializable message, GwtAtmosphereResource resource) {
-		BroadCasterVaadinSocket socket = resource
-				.getAttribute(BroadCasterVaadinSocket.class.getName());
-		String data = message.toString();
-		socket.handlePayload(data);
-	}
+    @Override
+    public void broadcast(Serializable message, GwtAtmosphereResource resource) {
+        BroadCasterVaadinSocket socket = resource
+                .getAttribute(BroadCasterVaadinSocket.class.getName());
+        String data = message.toString();
+        socket.handlePayload(data);
+    }
 
-	@Override
-	public int doComet(GwtAtmosphereResource resource) throws ServletException,
-			IOException {
+    @Override
+    public int doComet(GwtAtmosphereResource resource) throws ServletException,
+            IOException {
 
-		/*
-		 * TODO expect problems here. Session, websocket grizzly ~ nogo or
-		 * athmosphere does some magic i don't know about. Prepare to connect to
-		 * session by request path
-		 */
-		HttpSession session = resource.getSession(false);
-		if (session != null) {
-			/*
-			 * TODO check and handle
-			 * possible timing issues when renewing the "Socket" with long
-			 * polling. Currently changes can get lost if server side change exactly when socket is renewed?
-			 */
+        /*
+         * TODO expect problems here. Session, websocket grizzly ~ nogo or
+         * athmosphere does some magic i don't know about. Prepare to connect to
+         * session by request path
+         */
+        HttpSession session = resource.getSession(false);
+        if (session != null) {
+            /*
+             * TODO check and handle
+             * possible timing issues when renewing the "Socket" with long
+             * polling. Currently changes can get lost if server side change exactly when socket is renewed?
+             */
 
-			String path = resource.getRequest().getPathInfo();
-			String windowName = path.substring(path.lastIndexOf("/"));
-			String key = "dontpush-" + session.getId() + "-" + windowName;
-			Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
-					DefaultBroadcaster.class,
-					key , true);
-			resource.getAtmosphereResource().setBroadcaster(bc);
+            String path = resource.getRequest().getPathInfo();
+            String windowName = path.substring(path.lastIndexOf("/"));
+            String key = "dontpush-" + session.getId() + "-" + windowName;
+            Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
+                    DefaultBroadcaster.class,
+                    key , true);
+            resource.getAtmosphereResource().setBroadcaster(bc);
 
-			if(session.getAttribute(key) == null) {
-				session.setAttribute(key, new BroadcasterCleaner(key));
-			}
+            if(session.getAttribute(key) == null) {
+                session.setAttribute(key, new BroadcasterCleaner(key));
+            }
 
-			SocketCommunicationManager cm = (SocketCommunicationManager) session
-					.getAttribute(SocketCommunicationManager.class.getName());
-			Window window;
-			if ("/null".equals(windowName)) {
-				window = cm.getApplication().getMainWindow();
-			} else {
-				window = cm.getApplication().getWindow(windowName);
-			}
-			BroadCasterVaadinSocket socket = new BroadCasterVaadinSocket(
-					resource, cm, window);
-			resource.setAttribute(BroadCasterVaadinSocket.class.getName(),
-					socket);
-			cm.setSocket(socket, window);
-			Logger.getLogger(getClass().getName()).fine("doComet: Connected to CM" + session.getId());
-		}
+            SocketCommunicationManager cm = (SocketCommunicationManager) session
+                    .getAttribute(SocketCommunicationManager.class.getName());
+            Window window;
+            if ("/null".equals(windowName)) {
+                window = cm.getApplication().getMainWindow();
+            } else {
+                window = cm.getApplication().getWindow(windowName);
+            }
+            BroadCasterVaadinSocket socket = new BroadCasterVaadinSocket(
+                    resource, cm, window);
+            resource.setAttribute(BroadCasterVaadinSocket.class.getName(),
+                    socket);
+            cm.setSocket(socket, window);
+            Logger.getLogger(getClass().getName()).fine("doComet: Connected to CM" + session.getId());
+        }
 
-		return NO_TIMEOUT;
-	}
+        return NO_TIMEOUT;
+    }
 
-	@Override
-	public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
-		Logger.getLogger(getClass().getName()).severe(
-				"TODO Never happens in our case?");
-	}
+    @Override
+    public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
+        Logger.getLogger(getClass().getName()).severe(
+                "TODO Never happens in our case?");
+    }
 
-	static class BroadcasterCleaner implements HttpSessionBindingListener {
+    static class BroadcasterCleaner implements HttpSessionBindingListener {
 
-		private String key;
+        private String key;
 
-		public BroadcasterCleaner(String key) {
-			this.key = key;
-		}
+        public BroadcasterCleaner(String key) {
+            this.key = key;
+        }
 
-		public void valueBound(HttpSessionBindingEvent event) {
-			// TODO Auto-generated method stub
+        public void valueBound(HttpSessionBindingEvent event) {
+            // TODO Auto-generated method stub
 
-		}
+        }
 
-		public void valueUnbound(HttpSessionBindingEvent event) {
-			Broadcaster lookup = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, false);
-			if(lookup != null) {
-				DefaultBroadcasterFactory.getDefault().remove(lookup, key);
-			}
-		}
+        public void valueUnbound(HttpSessionBindingEvent event) {
+            Broadcaster lookup = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, false);
+            if(lookup != null) {
+                DefaultBroadcasterFactory.getDefault().remove(lookup, key);
+            }
+        }
 
-	}
+    }
 
 }

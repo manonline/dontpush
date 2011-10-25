@@ -31,6 +31,7 @@ import javax.servlet.http.HttpSession;
  * all servers and create app server specific parts dynamically.
  *
  * @author mattitahvonen
+ * @author Mark Thomas
  */
 public class DontPushOzoneServlet extends ApplicationServlet {
 

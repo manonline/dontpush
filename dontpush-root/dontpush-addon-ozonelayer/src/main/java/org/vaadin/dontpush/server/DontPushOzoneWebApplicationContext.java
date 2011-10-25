@@ -31,8 +31,6 @@ import javax.servlet.http.HttpSession;
  * added to a {@link javax.servlet.http.HttpSession}.
  *
  * @author Mark Thomas
- * @version 1.0.0
- * @since 1.0.0
  */
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
 

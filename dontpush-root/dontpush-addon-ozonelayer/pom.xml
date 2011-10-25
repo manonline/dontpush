@@ -1,157 +1,156 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<version>0.3.1-SNAPSHOT</version>
-	<groupId>org.vaadin</groupId>
-	<artifactId>dontpush-addon-ozonelayer</artifactId>
-	<packaging>jar</packaging>
-	<name>dontpush ozone layer</name>
-	<description>dontpush add-on based on atmosphere library</description>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <version>0.3.1-SNAPSHOT</version>
+    <groupId>org.vaadin</groupId>
+    <artifactId>dontpush-addon-ozonelayer</artifactId>
+    <packaging>jar</packaging>
+    <name>dontpush ozone layer</name>
+    <description>dontpush add-on based on atmosphere library</description>
 
-	<repositories>
-		<repository>
-			<id>glassfish-maven-repository.dev.java.net</id>
-			<name>GlassFish Maven Repository</name>
-			<url>http://download.java.net/maven/glassfish</url>
-		</repository>
-		<repository>
-			<id>oss.sonatype.org-snapshot</id>
-			<url>http://oss.sonatype.org/content/repositories/snapshots</url>
-		</repository>
+    <repositories>
+        <repository>
+            <id>glassfish-maven-repository.dev.java.net</id>
+            <name>GlassFish Maven Repository</name>
+            <url>http://download.java.net/maven/glassfish</url>
+        </repository>
+        <repository>
+            <id>oss.sonatype.org-snapshot</id>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
 
-	</repositories>
+    </repositories>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin</artifactId>
-			<version>6.7.1</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<type>jar</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.google.gwt</groupId>
-			<artifactId>gwt-user</artifactId>
-			<version>2.3.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin</artifactId>
+            <version>6.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>2.3.0</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
 
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-gwt-client</artifactId>
+            <version>0.8.0-RC2-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-gwt-common</artifactId>
+            <version>0.8.0-RC2-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-gwt-server</artifactId>
+            <version>0.8.0-RC2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-gwt-poll</artifactId>
+            <version>0.8.0-RC2-SNAPSHOT</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.atmosphere</groupId>
-			<artifactId>atmosphere-gwt-client</artifactId>
-			<version>0.8.0-RC2-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere</groupId>
-			<artifactId>atmosphere-gwt-common</artifactId>
-			<version>0.8.0-RC2-SNAPSHOT</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere</groupId>
-			<artifactId>atmosphere-gwt-server</artifactId>
-			<version>0.8.0-RC2-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere</groupId>
-			<artifactId>atmosphere-gwt-poll</artifactId>
-			<version>0.8.0-RC2-SNAPSHOT</version>
-		</dependency>
+    </dependencies>
 
-	</dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Vaadin-Package-Version>1</Vaadin-Package-Version>
+                            <Implementation-Vendor>${project.organization.name}
+                            </Implementation-Vendor>
+                            <!-- Overridden to make this work with the directory <Implementation-Title>${project.name}</Implementation-Title> -->
+                            <Implementation-Title>DontPush OzoneLayer</Implementation-Title>
+                            <Implementation-Version>${pom.version}</Implementation-Version>
+                            <Vaadin-Widgetsets>org.vaadin.dontpush.widgetset.DontPushOzoneWidgetset
+                            </Vaadin-Widgetsets>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <links>
+                        <link>http://vaadin.com/api/</link>
+                        <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
+                        <link>http://java.sun.com/javaee/5/docs/api/</link>
+                    </links>
+                    <encoding>UTF-8</encoding>
+                    <source>1.5</source>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Vaadin-Package-Version>1</Vaadin-Package-Version>
-							<Implementation-Vendor>${project.organization.name}
-							</Implementation-Vendor>
-							<!-- Overridden to make this work with the directory <Implementation-Title>${project.name}</Implementation-Title> -->
-							<Implementation-Title>DontPush OzoneLayer</Implementation-Title>
-							<Implementation-Version>${pom.version}</Implementation-Version>
-							<Vaadin-Widgetsets>org.vaadin.dontpush.widgetset.DontPushOzoneWidgetset
-							</Vaadin-Widgetsets>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<links>
-						<link>http://vaadin.com/api/</link>
-						<link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
-						<link>http://java.sun.com/javaee/5/docs/api/</link>
-					</links>
-					<encoding>UTF-8</encoding>
-					<source>1.5</source>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+        <!-- This is needed for the sources required by the GWT compiler to be
+            included in the produced JARs -->
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
 
-		<!-- This is needed for the sources required by the GWT compiler to be 
-			included in the produced JARs -->
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-		</resources>
-
-	</build>
+    </build>
 
 </project>

@@ -35,84 +35,84 @@ import java.util.logging.Logger;
  */
 public class SocketCommunicationManager extends CommunicationManager {
 
-	public SocketCommunicationManager(Application application) {
-		super(application);
-	}
+    public SocketCommunicationManager(Application application) {
+        super(application);
+    }
 
-	@Override
-	public Application getApplication() {
-		return super.getApplication();
-	}
+    @Override
+    public Application getApplication() {
+        return super.getApplication();
+    }
 
-	private boolean uidlRequest;
-	private Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
+    private boolean uidlRequest;
+    private Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
 
-	@Override
-	public boolean handleVariableBurst(Object source, Application app,
-			boolean success, String burst) {
-		uidlRequest = true;
-		try {
-			return super.handleVariableBurst(source, app, success, burst);
-		} finally {
-			uidlRequest = false;
-		}
-	}
+    @Override
+    public boolean handleVariableBurst(Object source, Application app,
+            boolean success, String burst) {
+        uidlRequest = true;
+        try {
+            return super.handleVariableBurst(source, app, success, burst);
+        } finally {
+            uidlRequest = false;
+        }
+    }
 
-	@Override
-	public void repaintRequested(RepaintRequestEvent event) {
-		super.repaintRequested(event);
-		Component paintable = (Component) event.getPaintable();
-		Window window = paintable.getWindow();
-		if (window.getParent() != null) {
-			window = window.getParent();
-		}
-		if (!uidlRequest) {
-			deferPaintPhase(window);
-		}
-	}
+    @Override
+    public void repaintRequested(RepaintRequestEvent event) {
+        super.repaintRequested(event);
+        Component paintable = (Component) event.getPaintable();
+        Window window = paintable.getWindow();
+        if (window.getParent() != null) {
+            window = window.getParent();
+        }
+        if (!uidlRequest) {
+            deferPaintPhase(window);
+        }
+    }
 
-	private void deferPaintPhase(final Window window) {
-		Thread thread = new Thread() {
-			/**
-			 * Add a very small latency for the tread that triggers to paint
-			 * phase.
-			 *
-			 * TODO redesign the whole server side paint phase triggering.
-			 * Probably the best if just a one thread that fires paints for app
-			 * instances. NOTE that atmosphere may actually do some cool things
-			 * for us alreay. This may actually be obsolete in atmosphere version.
-			 */
-			private long RESPONSE_LATENCY = 3;
+    private void deferPaintPhase(final Window window) {
+        Thread thread = new Thread() {
+            /**
+             * Add a very small latency for the tread that triggers to paint
+             * phase.
+             *
+             * TODO redesign the whole server side paint phase triggering.
+             * Probably the best if just a one thread that fires paints for app
+             * instances. NOTE that atmosphere may actually do some cool things
+             * for us alreay. This may actually be obsolete in atmosphere version.
+             */
+            private long RESPONSE_LATENCY = 3;
 
-			@Override
-			public void run() {
-				try {
-					sleep(RESPONSE_LATENCY);
-				} catch (InterruptedException e) {
-				}
-				synchronized (getApplication()) {
-					// // TODO Optimization Conditionally paint if still dirty (eg. client
-					// requst may have rendered dirty paintables)
-					try {
-						getSocketForWindow(window).paintChanges(false, false);
-					} catch (PaintException e) {
-						Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed", e);
-					} catch (IOException e) {
-						Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed (IO)", e);
-					}
-				}
-			}
+            @Override
+            public void run() {
+                try {
+                    sleep(RESPONSE_LATENCY);
+                } catch (InterruptedException e) {
+                }
+                synchronized (getApplication()) {
+                    // // TODO Optimization Conditionally paint if still dirty (eg. client
+                    // requst may have rendered dirty paintables)
+                    try {
+                        getSocketForWindow(window).paintChanges(false, false);
+                    } catch (PaintException e) {
+                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed", e);
+                    } catch (IOException e) {
+                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed (IO)", e);
+                    }
+                }
+            }
 
-		};
-		thread.start();
-	}
+        };
+        thread.start();
+    }
 
-	private VaadinWebSocket getSocketForWindow(Window window) {
-		return windowToSocket.get(window);
-	}
+    private VaadinWebSocket getSocketForWindow(Window window) {
+        return windowToSocket.get(window);
+    }
 
-	public void setSocket(VaadinWebSocket vaadinWebSocket, Window window) {
-		windowToSocket.put(window, vaadinWebSocket);
-	}
+    public void setSocket(VaadinWebSocket vaadinWebSocket, Window window) {
+        windowToSocket.put(window, vaadinWebSocket);
+    }
 
 }
