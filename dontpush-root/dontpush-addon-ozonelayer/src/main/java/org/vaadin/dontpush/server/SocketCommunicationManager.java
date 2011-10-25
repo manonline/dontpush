@@ -27,13 +27,19 @@ import com.vaadin.ui.Window;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author mattitahvonen
+ * @author Mark Thomas
  */
 public class SocketCommunicationManager extends CommunicationManager {
+
+    protected final transient Logger logger = LoggerFactory.getLogger(getClass());
+    private boolean uidlRequest;
+    private final transient Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
 
     public SocketCommunicationManager(Application application) {
         super(application);
@@ -44,29 +50,25 @@ public class SocketCommunicationManager extends CommunicationManager {
         return super.getApplication();
     }
 
-    private boolean uidlRequest;
-    private Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
-
     @Override
-    public boolean handleVariableBurst(Object source, Application app,
-            boolean success, String burst) {
-        uidlRequest = true;
+    public boolean handleVariableBurst(Object source, Application app, boolean success, String burst) {
+        this.uidlRequest = true;
         try {
             return super.handleVariableBurst(source, app, success, burst);
         } finally {
-            uidlRequest = false;
+            this.uidlRequest = false;
         }
     }
 
     @Override
     public void repaintRequested(RepaintRequestEvent event) {
         super.repaintRequested(event);
-        Component paintable = (Component) event.getPaintable();
+        Component paintable = (Component)event.getPaintable();
         Window window = paintable.getWindow();
         if (window.getParent() != null) {
             window = window.getParent();
         }
-        if (!uidlRequest) {
+        if (!this.uidlRequest) {
             deferPaintPhase(window);
         }
     }
@@ -89,25 +91,28 @@ public class SocketCommunicationManager extends CommunicationManager {
                 try {
                     sleep(RESPONSE_LATENCY);
                 } catch (InterruptedException e) {
+                    //ignore
                 }
-                synchronized (getApplication()) {
-                    // // TODO Optimization Conditionally paint if still dirty (eg. client
-                    // requst may have rendered dirty paintables)
-                    try {
-                        getSocketForWindow(window).paintChanges(false, false);
-                    } catch (PaintException e) {
-                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed", e);
-                    } catch (IOException e) {
-                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Paint failed (IO)", e);
-                    }
-                }
-            }
+                paintChanges(window);
 
+            }
         };
         thread.start();
     }
 
-    private VaadinWebSocket getSocketForWindow(Window window) {
+    protected void paintChanges(Window window) {
+        synchronized (getApplication()) {
+            try {
+                getSocketForWindow(window).paintChanges(false, false);
+            } catch (PaintException e) {
+                this.logger.error("Paint failed", e);
+            } catch (IOException e) {
+                this.logger.error("Paint failed (IO)", e);
+            }
+        }
+    }
+
+    protected VaadinWebSocket getSocketForWindow(Window window) {
         return windowToSocket.get(window);
     }
 

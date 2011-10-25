@@ -17,7 +17,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
@@ -29,12 +28,16 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class BroadCasterVaadinSocket implements VaadinWebSocket {
+public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
-    private GwtAtmosphereResource resource;
-    private SocketCommunicationManager cm;
-    private Callback callBack = new Callback() {
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected GwtAtmosphereResource resource;
+    protected SocketCommunicationManager cm;
+
+    protected Callback callBack = new Callback() {
 
         public void criticalNotification(Request request, Response response,
                 String cap, String msg, String details, String outOfSyncURL)
@@ -56,21 +59,25 @@ public class BroadCasterVaadinSocket implements VaadinWebSocket {
     };
     private Window window;
 
-    public BroadCasterVaadinSocket(GwtAtmosphereResource resource, SocketCommunicationManager cm,
-            Window window2) {
+    public BroadcasterVaadinSocket(GwtAtmosphereResource resource, SocketCommunicationManager cm, Window window2) {
         this.resource = resource;
         this.cm = cm;
         this.window = window2;
     }
 
-    public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
-            throws PaintException, IOException {
+    public void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        PrintWriter out = new PrintWriter(os);
-        cm.writeUidlResponce(callBack, repaintAll, out, window, analyzeLayouts);
-        out.flush();
-        out.close();
-        resource.post(new String(os.toByteArray()));
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(os);
+            this.cm.writeUidlResponce(this.callBack, repaintAll, out, this.window, analyzeLayouts);
+            out.flush();
+        } finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+        this.resource.post(new String(os.toByteArray()));
     }
 
     public void handlePayload(String data) {
@@ -78,17 +85,15 @@ public class BroadCasterVaadinSocket implements VaadinWebSocket {
         String params = split[0];
         boolean repaintAll = params.contains("repaintAll");
         if (repaintAll) {
-            cm.makeAllPaintablesDirty(window);
+            this.cm.makeAllPaintablesDirty(this.window);
         }
         boolean analyzeLayouts = params.contains("analyzeLayouts");
         // TODO handle various special variables (request params in std xhr)
         boolean success = true;
         if (split.length > 1) {
-            success = cm.handleVariableBurst(this, cm.getApplication(), true,
-                    (split.length > 1) ? split[1] : "");
+            success = this.cm.handleVariableBurst(this, cm.getApplication(), true, (split.length > 1) ? split[1] : "");
         } else {
-            //
-            cm.makeAllPaintablesDirty(window);
+            this.cm.makeAllPaintablesDirty(this.window);
         }
 
         try {
@@ -96,8 +101,7 @@ public class BroadCasterVaadinSocket implements VaadinWebSocket {
                 paintChanges(repaintAll, analyzeLayouts);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            this.logger.error(e.getMessage(), e);
         }
     }
 

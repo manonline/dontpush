@@ -22,8 +22,8 @@ import com.vaadin.ui.Window;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
-import java.util.logging.Logger;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
@@ -37,17 +37,39 @@ import org.atmosphere.gwt.server.GwtAtmosphereResource;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
+    private Class<BroadcasterVaadinSocket> socketClass;
+
+    @Override
+    public void init(ServletConfig servletConfig) throws ServletException {
+        super.init(servletConfig);
+        setSocketClass(servletConfig.getInitParameter("socketClass"));
+    }
+
+    public String getSocketClass() {
+        return this.socketClass == null ? null : this.socketClass.getName();
+    }
+
+    @SuppressWarnings("unchecked")
+    public void setSocketClass(String socketClassName) {
+        if (socketClassName != null) {
+            try {
+                this.socketClass = (Class<BroadcasterVaadinSocket>)Class.forName(socketClassName);
+            } catch (Exception e) {
+                this.logger.error("Error loading socket class `" + socketClassName + "'", e);
+                this.socketClass = null;
+            }
+        }
+    }
+
     @Override
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
-        BroadCasterVaadinSocket socket = resource
-                .getAttribute(BroadCasterVaadinSocket.class.getName());
+        BroadcasterVaadinSocket socket = resource.getAttribute(BroadcasterVaadinSocket.class.getName());
         String data = message.toString();
         socket.handlePayload(data);
     }
 
     @Override
-    public int doComet(GwtAtmosphereResource resource) throws ServletException,
-            IOException {
+    public int doComet(GwtAtmosphereResource resource) throws ServletException, IOException {
 
         /*
          * TODO expect problems here. Session, websocket grizzly ~ nogo or
@@ -62,44 +84,54 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
              * polling. Currently changes can get lost if server side change exactly when socket is renewed?
              */
 
-            String path = resource.getRequest().getPathInfo();
-            String windowName = path.substring(path.lastIndexOf("/"));
-            String key = "dontpush-" + session.getId() + "-" + windowName;
-            Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
-                    DefaultBroadcaster.class,
-                    key , true);
+            final String path = resource.getRequest().getPathInfo();
+            final String windowName = path.substring(path.lastIndexOf("/"));
+            final String key = "dontpush-" + session.getId() + "-" + windowName;
+            final Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, true);
             resource.getAtmosphereResource().setBroadcaster(bc);
 
-            if(session.getAttribute(key) == null) {
+            if (session.getAttribute(key) == null) {
                 session.setAttribute(key, new BroadcasterCleaner(key));
             }
 
-            SocketCommunicationManager cm = (SocketCommunicationManager) session
-                    .getAttribute(SocketCommunicationManager.class.getName());
-            Window window;
-            if ("/null".equals(windowName)) {
-                window = cm.getApplication().getMainWindow();
-            } else {
-                window = cm.getApplication().getWindow(windowName);
+            final SocketCommunicationManager cm =
+              (SocketCommunicationManager)session.getAttribute(SocketCommunicationManager.class.getName());
+
+            if (cm != null) {
+                Window window;
+                if ("/null".equals(windowName)) {
+                    window = cm.getApplication().getMainWindow();
+                } else {
+                    window = cm.getApplication().getWindow(windowName);
+                }
+                BroadcasterVaadinSocket socket = createSocket(resource, cm, window);
+                resource.setAttribute(BroadcasterVaadinSocket.class.getName(), socket);
+                cm.setSocket(socket, window);
+                this.logger.debug("doComet: Connected to CM" + session.getId());
             }
-            BroadCasterVaadinSocket socket = new BroadCasterVaadinSocket(
-                    resource, cm, window);
-            resource.setAttribute(BroadCasterVaadinSocket.class.getName(),
-                    socket);
-            cm.setSocket(socket, window);
-            Logger.getLogger(getClass().getName()).fine("doComet: Connected to CM" + session.getId());
         }
 
         return NO_TIMEOUT;
     }
 
-    @Override
-    public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
-        Logger.getLogger(getClass().getName()).severe(
-                "TODO Never happens in our case?");
+    protected BroadcasterVaadinSocket createSocket(GwtAtmosphereResource resource, SocketCommunicationManager cm, Window window) {
+        if (this.socketClass != null) {
+            try {
+                return this.socketClass.getConstructor(GwtAtmosphereResource.class, SocketCommunicationManager.class, Window.class)
+                  .newInstance(resource, cm, window);
+            } catch (Exception e) {
+                this.logger.error("Error creating socket", e);
+            }
+        }
+        return new BroadcasterVaadinSocket(resource, cm, window);
     }
 
-    static class BroadcasterCleaner implements HttpSessionBindingListener {
+    @Override
+    public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
+        this.logger.error("TODO Never happens in our case?");
+    }
+
+    static class BroadcasterCleaner implements HttpSessionBindingListener, Serializable {
 
         private String key;
 
@@ -108,17 +140,13 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         }
 
         public void valueBound(HttpSessionBindingEvent event) {
-            // TODO Auto-generated method stub
-
         }
 
         public void valueUnbound(HttpSessionBindingEvent event) {
             Broadcaster lookup = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, false);
-            if(lookup != null) {
-                DefaultBroadcasterFactory.getDefault().remove(lookup, key);
+            if (lookup != null) {
+                DefaultBroadcasterFactory.getDefault().remove(lookup, this.key);
             }
         }
-
     }
-
 }

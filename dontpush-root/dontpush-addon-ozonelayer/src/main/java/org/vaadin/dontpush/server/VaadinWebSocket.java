@@ -17,8 +17,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.terminal.PaintException;
-
 import java.io.IOException;
 
 /**
@@ -28,6 +26,6 @@ import java.io.IOException;
  */
 public interface VaadinWebSocket {
 
-    void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws PaintException, IOException;
+    void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws IOException;
 
 }
