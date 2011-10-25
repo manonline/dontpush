@@ -53,13 +53,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         public void onBeforeDisconnected() {
             VConsole.log("DEBUG: onbeforediconnected");
-            // TODO Auto-generated method stub
-
         }
 
         public void onDisconnected() {
             VConsole.log("WS Disconnected");
-            // re-open immediately if timeout happened ??
+            // reconnect is automatic
             // TODO I guess this should be configurable for different use cases
             // TODO how to handle windows forgotten open ?
         }
@@ -67,7 +65,6 @@ public class SocketApplicationConnection extends ApplicationConnection {
         public void onError(Throwable exception, boolean connected) {
             VConsole.log("DEBUG: onError");
             VConsole.log(exception);
-
         }
 
         public void onHeartbeat() {
