@@ -44,26 +44,31 @@
         </dependency>
 
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-client</artifactId>
-            <version>0.8.0-RC2-SNAPSHOT</version>
+            <version>0.7.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-common</artifactId>
-            <version>0.8.0-RC2-SNAPSHOT</version>
+            <version>0.7.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-server</artifactId>
-            <version>0.8.0-RC2-SNAPSHOT</version>
+            <version>0.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-poll</artifactId>
-            <version>0.8.0-RC2-SNAPSHOT</version>
+            <version>0.7.2</version>
         </dependency>
 
     </dependencies>

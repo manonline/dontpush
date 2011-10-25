@@ -24,6 +24,9 @@ import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Web application context for Vaadin applications.
  *
@@ -34,9 +37,13 @@ import javax.servlet.http.HttpSession;
  */
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
 
-    public DontPushOzoneWebApplicationContext(HttpSession session) {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Class<SocketCommunicationManager> communicationManagerClass;
+
+    public DontPushOzoneWebApplicationContext(HttpSession session, Class<SocketCommunicationManager> communicationManagerClass) {
         super();
         this.session = session;
+        this.communicationManagerClass = communicationManagerClass;
     }
 
     @Override
@@ -45,7 +52,16 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
 
         if (mgr == null) {
             // Creates new manager
-            mgr = new SocketCommunicationManager(application);
+            if (this.communicationManagerClass != null) {
+                try {
+                    mgr = this.communicationManagerClass.getConstructor(Application.class).newInstance(application);
+                } catch (Exception e) {
+                    this.logger.error(e.getMessage(), e);
+                }
+            }
+            if (mgr == null) {
+                mgr = new SocketCommunicationManager(application);
+            }
             this.session.setAttribute(SocketCommunicationManager.class.getName(), mgr);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }

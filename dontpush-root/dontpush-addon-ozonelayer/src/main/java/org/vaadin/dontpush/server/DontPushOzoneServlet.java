@@ -20,6 +20,8 @@ package org.vaadin.dontpush.server;
 import com.vaadin.terminal.gwt.server.ApplicationServlet;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -35,11 +37,27 @@ import javax.servlet.http.HttpSession;
  */
 public class DontPushOzoneServlet extends ApplicationServlet {
 
+    private Class<SocketCommunicationManager> communicationManagerClass;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        String communicationManagerClassName = config.getInitParameter("communicationManagerClass");
+        if (communicationManagerClassName != null) {
+            try {
+                this.communicationManagerClass = (Class<SocketCommunicationManager>)Class.forName(communicationManagerClassName);
+            } catch (ClassNotFoundException e) {
+                this.communicationManagerClass = null;
+            }
+        }
+    }
+
     @Override
     protected WebApplicationContext getApplicationContext(HttpSession session) {
         WebApplicationContext cx = (WebApplicationContext)session.getAttribute(WebApplicationContext.class.getName());
         if (cx == null) {
-            cx = new DontPushOzoneWebApplicationContext(session);
+            cx = new DontPushOzoneWebApplicationContext(session, this.communicationManagerClass);
             session.setAttribute(WebApplicationContext.class.getName(), cx);
         }
         return cx;
