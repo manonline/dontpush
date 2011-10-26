@@ -16,6 +16,7 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
@@ -65,6 +66,17 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     }
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws IOException {
+        final Application application = window.getApplication();
+        if (!application.isRunning()) {
+            String logoutUrl = application.getLogoutURL();
+            if (logoutUrl == null) {
+                logoutUrl = application.getURL().toString();
+            }
+            final String msg = "\"redirect\": {\"url\": \"" + logoutUrl + "\"}";
+            this.resource.post(msg);
+            return;
+        }
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         PrintWriter out = null;
         try {
