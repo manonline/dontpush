@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vaadin</groupId>
-	<version>0.3.1-SNAPSHOT</version>
+	<version>0.3.3</version>
 	<artifactId>dontpush-demo-ozonelayer</artifactId>
 	<packaging>war</packaging>
 	<name>dontpush - Demo (ozonelayer)</name>
@@ -14,6 +14,13 @@
 		<addonBaseName>dontpush-addon</addonBaseName>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>vaadin-addons</id>
+			<url>http://maven.vaadin.com/vaadin-addons</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -23,7 +30,7 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>dontpush-addon-ozonelayer</artifactId>
-			<version>0.3.1-SNAPSHOT</version>
+			<version>0.3.3</version>
 		</dependency>
 
 		<dependency>
@@ -124,8 +131,8 @@
 					<hostedWebapp>${project.build.directory}/${project.build.finalName}</hostedWebapp>
 					<noServer>true</noServer>
 					<compileReport>false</compileReport>
-<!-- 					<draftCompile>true</draftCompile> -->
-<!-- 					<style>PRETTY</style> -->
+					<!-- <draftCompile>true</draftCompile> -->
+					<!-- <style>PRETTY</style> -->
 				</configuration>
 				<executions>
 					<execution>
