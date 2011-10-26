@@ -1,0 +1,34 @@
+2011-10-25 17:05:12
+
+  * Removed use of deprecated method createCommunicationManager in servlet in
+    favor of a WebApplicationContext to create SocketCommunicationManager
+  * Swapped to use of SLF4J for server-side code since Atmosphere requires
+    SLF4J.  This allows developers to now choose the logging framework to use
+    in conjunction with SLF4J of which JULI is an option
+  * A sub-class of SocketCommunicationManager can be used by specifying an
+    init-param to DontPushOzoneServlet with the param-name of
+    communicationManagerClass and a param-value of the class name
+  * A subclass of BroadcasterVaadinSocket can be used by specifying either an
+    init-param to DontPushOzoneServlet with a param-name of socketClass or by
+    adding a property element with the name attribute of socketClass as a
+    child of the atmosphere-hander element which defines
+    AtmosphereDontPushHandler in META-INF/atmosphere.xml. This is useful for
+    Spring appliations where you have scoped beans.
+
+    Examples:
+
+        WEB-INF/web.xml:
+
+        <servlet ...>
+            <init-param>
+                <param-name>socketClass</paramName>
+                <param-value>com.foo.bar.MyBroadcasterVaadinSocket</param-name>
+            <init-param>
+        </servlet>
+
+        META-INF/atmosphere.xml:
+
+        <atmosphere-handler context-root="/bleh" class-name="org.vaadin.dontpush.server.AtmosphereDontPushHandler">
+            <property name="heartbeat" value="5000"/>
+            <property name="socketClass" value="com.foo.bar.MyBroadcasterVaadinSocket"/>
+        </atmosphere-handler>
