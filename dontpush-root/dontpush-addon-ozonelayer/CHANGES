@@ -35,3 +35,9 @@ VERSION 0.3.3
             <property name="heartbeat" value="5000"/>
             <property name="socketClass" value="com.foo.bar.MyBroadcasterVaadinSocket"/>
         </atmosphere-handler>
+
+VERSION 0.3.4
+
+2011-10-26 15:18:16
+
+  * Fixed bug whereby redirect would not occur on application close
