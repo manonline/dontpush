@@ -16,7 +16,7 @@
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <vaadin.version>6.6.0</vaadin.version>
+    <vaadin.version>6.7.1</vaadin.version>
     <gwt.version>2.3.0</gwt.version>
   	<jetty.version>7.4.0.v20110414</jetty.version>
   	<gwt.plugin.version>2.2.0</gwt.plugin.version>
