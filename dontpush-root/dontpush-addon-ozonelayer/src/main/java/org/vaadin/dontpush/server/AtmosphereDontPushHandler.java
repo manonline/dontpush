@@ -84,7 +84,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
              */
 
             final String path = resource.getRequest().getPathInfo();
-            final String windowName = path.substring(path.lastIndexOf("/"));
+            final String windowName = path.substring(path.lastIndexOf("/") + 1);
             final String key = "dontpush-" + session.getId() + "-" + windowName;
             final Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(DefaultBroadcaster.class, key, true);
             resource.getAtmosphereResource().setBroadcaster(bc);
@@ -98,7 +98,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
             if (cm != null) {
                 Window window;
-                if ("/null".equals(windowName)) {
+                if ("null".equals(windowName)) {
                     window = cm.getApplication().getMainWindow();
                 } else {
                     window = cm.getApplication().getWindow(windowName);
