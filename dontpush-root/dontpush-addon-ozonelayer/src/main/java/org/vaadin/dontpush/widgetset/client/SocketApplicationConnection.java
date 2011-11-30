@@ -34,7 +34,7 @@ import org.atmosphere.gwt.client.AtmosphereListener;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- *
+ * 
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -112,7 +112,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
         if (this.ws == null) {
             // if timed out or not started, create websocket to server
             String url = getConfiguration().getApplicationUri() + "UIDL/";
-            if(url.startsWith("/")) {
+            if (url.startsWith("/")) {
                 String hostPageBaseURL = GWT.getHostPageBaseURL();
                 String[] split = hostPageBaseURL.split("\\/\\/");
                 String host = split[1].substring(0, split[1].indexOf("/"));
@@ -146,13 +146,15 @@ public class SocketApplicationConnection extends ApplicationConnection {
     }
 
     @Override
-    protected void makeUidlRequest(String requestData, String extraParams, boolean forceSync) {
+    protected void makeUidlRequest(String requestData, String extraParams,
+            boolean forceSync) {
         VConsole.log("new Socket message: " + requestData);
         if (forceSync) {
             /*
-             * TODO figure out if socket can be used on unload.
+             * TODO Check if this really works. Else we could send the last
+             * "window close event" with synchronous xhr.
              */
-            super.makeUidlRequest(requestData, extraParams, forceSync);
+            getWebSocket().broadcast(extraParams + "#" + requestData);
         } else {
             startRequest();
             this.ownRequestPending = true;

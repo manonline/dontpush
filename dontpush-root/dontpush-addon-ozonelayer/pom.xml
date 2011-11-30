@@ -8,6 +8,10 @@
     <packaging>jar</packaging>
     <name>dontpush ozone layer</name>
     <description>dontpush add-on based on atmosphere library</description>
+    
+    <properties>
+    	<atmosphere.version>0.8.1</atmosphere.version>
+    </properties>
 
     <repositories>
         <repository>
@@ -51,24 +55,24 @@
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-client</artifactId>
-            <version>0.7.2</version>
+            <version>${atmosphere.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-common</artifactId>
-            <version>0.7.2</version>
+            <version>${atmosphere.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-server</artifactId>
-            <version>0.7.2</version>
+            <version>${atmosphere.version}</version>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>atmosphere-gwt-poll</artifactId>
-            <version>0.7.2</version>
+            <version>${atmosphere.version}</version>
         </dependency>
 
     </dependencies>
