@@ -82,25 +82,15 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     }
 
     private void establishConnection(GwtAtmosphereResource resource) {
-        /*
-         * TODO expect problems here. Session, websocket grizzly ~ nogo or
-         * athmosphere does some magic i don't know about. Prepare to connect to
-         * session by request path
-         */
         final String path = resource.getRequest().getPathInfo();
         String[] split = path.split("/");
         String cmId = split[1];
-        if ("undefined".equals(cmId)) {
-            // httpOnly session e.g. in tomcat7
-            // TODO build workaround for this. We don't use session id as it is
-            // in some cases faked by atmosphere
-            cmId = resource.getRequest().getSession().getId();
-        }
         String windowName = split[2];
         /*
          * TODO check and handle possible timing issues when renewing the
          * "Socket" with long polling. Currently changes can get lost if server
-         * side change exactly when socket is renewed?
+         * side change exactly when socket is renewed? Should use some
+         * atmosphere cache?
          */
 
         final String key = "dontpush-" + cmId + "-" + windowName;
@@ -118,7 +108,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                 window = cm.getApplication().getWindow(windowName);
             }
             VaadinWebSocket socket = cm.getSocketForWindow(window);
-            if(socket == null) {
+            if (socket == null) {
                 socket = createSocket(bc, cm, window);
                 cm.setSocket(socket, window);
             }
@@ -132,9 +122,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         }
     }
 
-    protected BroadcasterVaadinSocket createSocket(
-            Broadcaster resource, SocketCommunicationManager cm,
-            Window window) {
+    protected BroadcasterVaadinSocket createSocket(Broadcaster resource,
+            SocketCommunicationManager cm, Window window) {
         if (this.socketClass != null) {
             try {
                 return this.socketClass.getConstructor(
@@ -165,8 +154,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         sessToMgr.put(cmId, mgr);
     }
 
-    public static SocketCommunicationManager getCommunicationManager(
-            String cmId) {
+    public static SocketCommunicationManager getCommunicationManager(String cmId) {
         return sessToMgr.get(cmId);
     }
 
