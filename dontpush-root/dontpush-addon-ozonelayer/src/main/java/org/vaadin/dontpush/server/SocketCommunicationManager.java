@@ -17,8 +17,11 @@
 package org.vaadin.dontpush.server;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -38,16 +41,20 @@ import com.vaadin.ui.Window;
 @SuppressWarnings("serial")
 public class SocketCommunicationManager extends CommunicationManager {
 
-    protected final transient Logger logger = LoggerFactory.getLogger(getClass());
-    private boolean uidlRequest;
+    protected final transient Logger logger = LoggerFactory
+            .getLogger(getClass());
     private final transient Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
     private String id;
+    private Window activeUidlRequestWindow;
+    
+    private Set<Window> dirtyWindows = Collections.synchronizedSet(new HashSet<Window>());
+    private Thread thread;
 
     public SocketCommunicationManager(Application application) {
         super(application);
         id = UUID.randomUUID().toString();
     }
-    
+
     public String getId() {
         return id;
     }
@@ -58,53 +65,53 @@ public class SocketCommunicationManager extends CommunicationManager {
     }
 
     @Override
-    public boolean handleVariableBurst(Object source, Application app, boolean success, String burst) {
-        this.uidlRequest = true;
-        try {
-            return super.handleVariableBurst(source, app, success, burst);
-        } finally {
-            this.uidlRequest = false;
-        }
-    }
-
-    @Override
     public void repaintRequested(RepaintRequestEvent event) {
         super.repaintRequested(event);
-        Component paintable = (Component)event.getPaintable();
+        Component paintable = (Component) event.getPaintable();
         Window window = paintable.getWindow();
         if (window.getParent() != null) {
             window = window.getParent();
         }
-        if (!this.uidlRequest) {
-            deferPaintPhase(window);
+        if (this.activeUidlRequestWindow != window) {
+            dirtyWindows.add(window);
+            deferPaintPhase();
         }
     }
 
-    private void deferPaintPhase(final Window window) {
-        Thread thread = new Thread() {
-            /**
-             * Add a very small latency for the tread that triggers to paint
-             * phase.
-             *
-             * TODO redesign the whole server side paint phase triggering.
-             * Probably the best if just a one thread that fires paints for app
-             * instances. NOTE that atmosphere may actually do some cool things
-             * for us alreay. This may actually be obsolete in atmosphere version.
-             */
-            private long RESPONSE_LATENCY = 3;
-
-            @Override
-            public void run() {
-                try {
-                    sleep(RESPONSE_LATENCY);
-                } catch (InterruptedException e) {
-                    //ignore
+    private void deferPaintPhase() {
+        if(thread == null) {
+            thread = new Thread() {
+                /**
+                 * Add a very small latency for the tread that triggers to paint
+                 * phase.
+                 * 
+                 * TODO redesign the whole server side paint phase triggering.
+                 * Probably the best if just a one thread that fires paints for app
+                 * instances. NOTE that atmosphere may actually do some cool things
+                 * for us alreay. This may actually be obsolete in atmosphere
+                 * version.
+                 */
+                private long RESPONSE_LATENCY = 3;
+                
+                @Override
+                public void run() {
+                    try {
+                        sleep(RESPONSE_LATENCY);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                    thread = null;
+                    synchronized (dirtyWindows) {
+                        for (Window w : dirtyWindows) {
+                            paintChanges(w);
+                        }
+                    }
+                    dirtyWindows.clear();
+                    
                 }
-                paintChanges(window);
-
-            }
-        };
-        thread.start();
+            };
+            thread.start();
+        }
     }
 
     protected void paintChanges(Window window) {
@@ -118,7 +125,7 @@ public class SocketCommunicationManager extends CommunicationManager {
             }
         }
     }
-    
+
     protected VaadinWebSocket getSocketForWindow(Window window) {
         return windowToSocket.get(window);
     }
@@ -127,4 +134,11 @@ public class SocketCommunicationManager extends CommunicationManager {
         windowToSocket.put(window, vaadinWebSocket);
     }
 
+    /**
+     * This should be called before changing variables. Otherwise we don't know
+     * which window is posting them. Should also be nulled after the change
+     */
+    protected void setActiveWindow(Window window) {
+        activeUidlRequestWindow = window;
+    }
 }

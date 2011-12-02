@@ -85,7 +85,24 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         final String path = resource.getRequest().getPathInfo();
         String[] split = path.split("/");
         String cmId = split[1];
+        final SocketCommunicationManager cm = getCommunicationManager(cmId);
+        if (cm == null) {
+            this.logger
+                    .debug("Couldn't establish connection, no CM found for this session "
+                            + cmId);
+            // TODO can happen e.g. server restart, should cause relaod, now
+            // dies silently?
+            return;
+        }
         String windowName = split[2];
+        Window window;
+        if ("null".equals(windowName)) {
+            window = cm.getApplication().getMainWindow();
+            windowName = window.getName();
+        } else {
+            window = cm.getApplication().getWindow(windowName);
+        }
+
         /*
          * TODO check and handle possible timing issues when renewing the
          * "Socket" with long polling. Currently changes can get lost if server
@@ -98,15 +115,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                 DefaultBroadcaster.class, key, true);
         resource.getAtmosphereResource().setBroadcaster(bc);
 
-        final SocketCommunicationManager cm = getCommunicationManager(cmId);
-
         if (cm != null) {
-            Window window;
-            if ("null".equals(windowName)) {
-                window = cm.getApplication().getMainWindow();
-            } else {
-                window = cm.getApplication().getWindow(windowName);
-            }
             VaadinWebSocket socket = cm.getSocketForWindow(window);
             if (socket == null) {
                 socket = createSocket(bc, cm, window);
@@ -115,10 +124,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
                     socket);
             this.logger.debug("doComet: Connected to CM" + cmId);
-        } else {
-            this.logger
-                    .debug("Couldn't establish connection, no CM found for this session "
-                            + cmId);
         }
     }
 

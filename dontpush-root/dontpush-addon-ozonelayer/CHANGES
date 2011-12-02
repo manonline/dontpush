@@ -48,4 +48,12 @@ VERSION 0.3.5
 
   * Fixed issue with Window.open() calls
   
+VERSION 0.3.6
+
+2011-12-02
+
+  * Now supports Atmosphere 0.8.1
+  * Shouldn't throw servlet exception when window is closed
+  * Better multiwindow support
+  * Some other smaller enhancements
   

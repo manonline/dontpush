@@ -59,13 +59,15 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     };
     private Window window;
 
-    public BroadcasterVaadinSocket(Broadcaster resource, SocketCommunicationManager cm, Window window2) {
+    public BroadcasterVaadinSocket(Broadcaster resource,
+            SocketCommunicationManager cm, Window window2) {
         this.resource = resource;
         this.cm = cm;
         this.window = window2;
     }
 
-    public void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws IOException {
+    public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
+            throws IOException {
         final Application application = window.getApplication();
         if (!application.isRunning()) {
             String logoutUrl = application.getLogoutURL();
@@ -81,8 +83,11 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         PrintWriter out = null;
         try {
             out = new PrintWriter(os);
-            this.cm.writeUidlResponce(this.callBack, repaintAll, out, this.window, analyzeLayouts);
+            this.cm.writeUidlResponce(this.callBack, repaintAll, out,
+                    this.window, analyzeLayouts);
             out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             if (out != null) {
                 out.close();
@@ -92,27 +97,37 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     }
 
     public void handlePayload(String data) {
-        String[] split = data.split("#");
-        String params = split[0];
-        boolean repaintAll = params.contains("repaintAll");
-        if (repaintAll) {
-            this.cm.makeAllPaintablesDirty(this.window);
-        }
-        boolean analyzeLayouts = params.contains("analyzeLayouts");
-        // TODO handle various special variables (request params in std xhr)
-        boolean success = true;
-        if (split.length > 1) {
-            success = this.cm.handleVariableBurst(this, cm.getApplication(), true, (split.length > 1) ? split[1] : "");
-        } else {
-            this.cm.makeAllPaintablesDirty(this.window);
-        }
+        synchronized (cm.getApplication()) {
 
-        try {
-            if (success) {
-                paintChanges(repaintAll, analyzeLayouts);
+            String[] split = data.split("#");
+            String params = split[0];
+            boolean repaintAll = params.contains("repaintAll");
+            if (repaintAll) {
+                this.cm.makeAllPaintablesDirty(this.window);
             }
-        } catch (IOException e) {
-            this.logger.error(e.getMessage(), e);
+            boolean analyzeLayouts = params.contains("analyzeLayouts");
+            // TODO handle various special variables (request params in std xhr)
+            boolean success = true;
+            if (split.length > 1) {
+                cm.setActiveWindow(window);
+                try {
+                    success = this.cm.handleVariableBurst(this, cm
+                            .getApplication(), true,
+                            (split.length > 1) ? split[1] : "");
+                } finally {
+                    cm.setActiveWindow(null);
+                }
+            } else {
+                this.cm.makeAllPaintablesDirty(this.window);
+            }
+
+            try {
+                if (success) {
+                    paintChanges(repaintAll, analyzeLayouts);
+                }
+            } catch (IOException e) {
+                this.logger.error(e.getMessage(), e);
+            }
         }
     }
 
