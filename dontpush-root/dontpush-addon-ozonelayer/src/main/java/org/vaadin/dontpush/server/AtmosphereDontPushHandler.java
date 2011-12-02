@@ -66,19 +66,11 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
         BroadcasterVaadinSocket socket = resource
                 .getAttribute(BroadcasterVaadinSocket.class.getName());
-        if (socket == null) {
-            // TODO check if this can really happen and if it helps? Thought it
-            // solve one issue with tomcat, but I think it was session mix up
-            // error.
-            establishConnection(resource);
-            socket = resource.getAttribute(BroadcasterVaadinSocket.class
-                    .getName());
-        }
         if (socket != null) {
             String data = message.toString();
             socket.handlePayload(data);
         } else {
-            logger.error("Could not handle msg, cm not found.");
+            logger.info("Could not handle msg, cm not found. (non-functional) close request??");
         }
     }
 
@@ -125,10 +117,13 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             } else {
                 window = cm.getApplication().getWindow(windowName);
             }
-            BroadcasterVaadinSocket socket = createSocket(resource, cm, window);
+            VaadinWebSocket socket = cm.getSocketForWindow(window);
+            if(socket == null) {
+                socket = createSocket(bc, cm, window);
+                cm.setSocket(socket, window);
+            }
             resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
                     socket);
-            cm.setSocket(socket, window);
             this.logger.debug("doComet: Connected to CM" + cmId);
         } else {
             this.logger
@@ -138,7 +133,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     }
 
     protected BroadcasterVaadinSocket createSocket(
-            GwtAtmosphereResource resource, SocketCommunicationManager cm,
+            Broadcaster resource, SocketCommunicationManager cm,
             Window window) {
         if (this.socketClass != null) {
             try {

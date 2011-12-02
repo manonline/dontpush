@@ -16,25 +16,25 @@
 
 package org.vaadin.dontpush.server;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+
+import org.atmosphere.cpr.Broadcaster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
 import com.vaadin.ui.Window;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-
-import org.atmosphere.gwt.server.GwtAtmosphereResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected GwtAtmosphereResource resource;
+    protected Broadcaster resource;
     protected SocketCommunicationManager cm;
 
     protected Callback callBack = new Callback() {
@@ -59,7 +59,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     };
     private Window window;
 
-    public BroadcasterVaadinSocket(GwtAtmosphereResource resource, SocketCommunicationManager cm, Window window2) {
+    public BroadcasterVaadinSocket(Broadcaster resource, SocketCommunicationManager cm, Window window2) {
         this.resource = resource;
         this.cm = cm;
         this.window = window2;
@@ -73,7 +73,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 logoutUrl = application.getURL().toString();
             }
             final String msg = "\"redirect\": {\"url\": \"" + logoutUrl + "\"}";
-            this.resource.post(msg);
+            this.resource.broadcast(msg);
             return;
         }
 
@@ -88,7 +88,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 out.close();
             }
         }
-        this.resource.post(new String(os.toByteArray()));
+        this.resource.broadcast(new String(os.toByteArray()));
     }
 
     public void handlePayload(String data) {

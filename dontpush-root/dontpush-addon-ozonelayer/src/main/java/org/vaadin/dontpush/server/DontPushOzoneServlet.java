@@ -43,6 +43,7 @@ import com.vaadin.ui.Window;
  * @author mattitahvonen
  * @author Mark Thomas
  */
+@SuppressWarnings("serial")
 public class DontPushOzoneServlet extends ApplicationServlet {
 
     private Class<SocketCommunicationManager> communicationManagerClass;

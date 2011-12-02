@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Mark Thomas
  */
+@SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());

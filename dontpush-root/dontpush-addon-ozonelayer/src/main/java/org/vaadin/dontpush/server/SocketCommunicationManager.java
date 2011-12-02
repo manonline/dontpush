@@ -35,6 +35,7 @@ import com.vaadin.ui.Window;
  * @author mattitahvonen
  * @author Mark Thomas
  */
+@SuppressWarnings("serial")
 public class SocketCommunicationManager extends CommunicationManager {
 
     protected final transient Logger logger = LoggerFactory.getLogger(getClass());
