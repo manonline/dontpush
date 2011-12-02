@@ -3,6 +3,7 @@ package org.vaadin.dontpush.demo;
 import java.util.Collection;
 
 import com.vaadin.Application;
+import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Window;
 
 public class DontpushApplication extends Application {
@@ -19,6 +20,7 @@ public class DontpushApplication extends Application {
 		if(w == null) {
 			w = new TestWindow();
 			addWindow(w);
+			w.open(new ExternalResource(w.getURL()));
 			return w;
 		}
 		return w;

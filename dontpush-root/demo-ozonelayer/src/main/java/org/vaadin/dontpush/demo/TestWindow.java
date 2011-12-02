@@ -13,13 +13,15 @@ import com.vaadin.ui.Button.ClickEvent;
 
 
 public class TestWindow extends Window {
-	public static HashSet<TestWindow> openApps = new HashSet<TestWindow>();
+	public static HashSet<TestWindow> openWindows = new HashSet<TestWindow>();
 
 	private CssLayout messages;
 
+	private Label label;
+
 	public TestWindow() {
 
-		Label label = new Label("Hello Vaadin user. This is a demo app for Atmosphere powered DontPush implementation.");
+		label = new Label("Hello Vaadin user. This is a demo app for Atmosphere powered DontPush implementation.");
 		addComponent(label);
         final ProgressIndicator progressIndicator = new ProgressIndicator();
         progressIndicator.setValue(0);
@@ -91,6 +93,7 @@ public class TestWindow extends Window {
 	@Override
 	public void attach() {
 		super.attach();
+		label.setValue(label.getValue() + " Window name/id: " + getName());
         register(this);
 	}
 	
@@ -101,33 +104,37 @@ public class TestWindow extends Window {
 	}
 	
 	static void register(TestWindow app) {
-		synchronized (openApps) {
-			openApps.add(app);
+		synchronized (openWindows) {
+			openWindows.add(app);
+			System.err.println("Registered " + app.getName());
 		}
 	}
 	
 	static void unregister(TestWindow app) {
-		synchronized (openApps) {
-			openApps.remove(app);
+		synchronized (openWindows) {
+			openWindows.remove(app);
+			System.err.println("Unregistered " + app.getName());
 		}
 	}
 	
 	static void broadcast(String msg) {
-		TestWindow[] apps;
-		synchronized (openApps) {
-			apps = new TestWindow[openApps.size()];
-			openApps.toArray(apps);
+		TestWindow[] windows;
+		synchronized (openWindows) {
+			windows = new TestWindow[openWindows.size()];
+			openWindows.toArray(windows);
 		}
-		for (int i = 0; i < apps.length; i++) {
-			TestWindow app = apps[i];
-			synchronized (app) {
-				app.addMessage(msg);
+		for (int i = 0; i < windows.length; i++) {
+			TestWindow w = windows[i];
+			System.err.println("Sending message " + msg + " to " + w.getName());
+			synchronized (w) {
+				w.messages.requestRepaintRequests();
+				w.addMessage(msg);
 			}
 		}
 	}
 
 
-	private void addMessage(String msg) {
+	public void addMessage(String msg) {
 		messages.addComponent(new Label(new Date() + " New message:" + msg));
 		if(messages.getComponentCount() > 4) {
 			messages.removeComponent(messages.getComponentIterator().next());
