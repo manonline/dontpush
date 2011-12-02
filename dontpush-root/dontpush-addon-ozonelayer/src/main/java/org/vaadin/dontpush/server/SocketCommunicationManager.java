@@ -16,19 +16,20 @@
 
 package org.vaadin.dontpush.server;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.Application;
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.Paintable.RepaintRequestEvent;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Window;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author mattitahvonen
@@ -39,9 +40,15 @@ public class SocketCommunicationManager extends CommunicationManager {
     protected final transient Logger logger = LoggerFactory.getLogger(getClass());
     private boolean uidlRequest;
     private final transient Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
+    private String id;
 
     public SocketCommunicationManager(Application application) {
         super(application);
+        id = UUID.randomUUID().toString();
+    }
+    
+    public String getId() {
+        return id;
     }
 
     @Override
@@ -110,7 +117,7 @@ public class SocketCommunicationManager extends CommunicationManager {
             }
         }
     }
-
+    
     protected VaadinWebSocket getSocketForWindow(Window window) {
         return windowToSocket.get(window);
     }

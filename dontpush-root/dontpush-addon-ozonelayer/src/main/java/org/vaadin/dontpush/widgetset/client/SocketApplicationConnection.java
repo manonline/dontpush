@@ -120,15 +120,15 @@ public class SocketApplicationConnection extends ApplicationConnection {
                 url = protoAndHost + url;
             }
 
-            String cookie = Cookies.getCookie("JSESSIONID");
-            url += cookie + "/" + getConfiguration().getInitialWindowName();
+            String cmid = Cookies.getCookie("OZONE_CM_ID");
+            url += cmid + "/" + getConfiguration().getInitialWindowName();
             VConsole.log(url);
 
             boolean webkit = BrowserInfo.get().isWebkit();
             VConsole.log("Creating atmosphere client...");
             /*
              * Ask atmosphere guys to fix this. Automatic degrading from
-             * websockets don't work.
+             * websockets don't work in others but webkit.
              */
             this.ws = new AtmosphereClient(url, null, _cb, webkit);
             VConsole.log("...starting...");

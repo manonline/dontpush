@@ -16,6 +16,9 @@
 
 package org.vaadin.dontpush.server;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
@@ -40,6 +43,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<SocketCommunicationManager> communicationManagerClass;
+    private Collection<SocketCommunicationManager> mgrs = new LinkedList<SocketCommunicationManager>();
 
     public DontPushOzoneWebApplicationContext(HttpSession session,
             Class<SocketCommunicationManager> communicationManagerClass) {
@@ -69,8 +73,9 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
             }
             this.session.setAttribute(
                     SocketCommunicationManager.class.getName(), mgr);
-            AtmosphereDontPushHandler.setCommunicationManager(session.getId(),
+            AtmosphereDontPushHandler.setCommunicationManager(mgr.getId(),
                     mgr);
+            mgrs .add(mgr);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }
         return mgr;
@@ -79,7 +84,8 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     @Override
     public void valueUnbound(HttpSessionBindingEvent event) {
         super.valueUnbound(event);
-        String id = event.getSession().getId();
-        AtmosphereDontPushHandler.setCommunicationManager(id, null);
+        for (SocketCommunicationManager mgr : mgrs) {
+            AtmosphereDontPushHandler.forgetCommunicationMananer(mgr.getId());
+        }
     }
 }

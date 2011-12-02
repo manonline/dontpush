@@ -97,12 +97,12 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
          */
         final String path = resource.getRequest().getPathInfo();
         String[] split = path.split("/");
-        String sessionId = split[1];
-        if ("undefined".equals(sessionId)) {
+        String cmId = split[1];
+        if ("undefined".equals(cmId)) {
             // httpOnly session e.g. in tomcat7
             // TODO build workaround for this. We don't use session id as it is
             // in some cases faked by atmosphere
-            sessionId = resource.getRequest().getSession().getId();
+            cmId = resource.getRequest().getSession().getId();
         }
         String windowName = split[2];
         /*
@@ -111,12 +111,12 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
          * side change exactly when socket is renewed?
          */
 
-        final String key = "dontpush-" + sessionId + "-" + windowName;
+        final String key = "dontpush-" + cmId + "-" + windowName;
         final Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
                 DefaultBroadcaster.class, key, true);
         resource.getAtmosphereResource().setBroadcaster(bc);
 
-        final SocketCommunicationManager cm = getCommunicationManager(sessionId);
+        final SocketCommunicationManager cm = getCommunicationManager(cmId);
 
         if (cm != null) {
             Window window;
@@ -129,11 +129,11 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
                     socket);
             cm.setSocket(socket, window);
-            this.logger.debug("doComet: Connected to CM" + sessionId);
+            this.logger.debug("doComet: Connected to CM" + cmId);
         } else {
             this.logger
                     .debug("Couldn't establish connection, no CM found for this session "
-                            + sessionId);
+                            + cmId);
         }
     }
 
@@ -165,16 +165,17 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     private static Map<String, SocketCommunicationManager> sessToMgr = Collections
             .synchronizedMap(new HashMap<String, SocketCommunicationManager>());
 
-    public static void setCommunicationManager(String sessionId,
+    public static void setCommunicationManager(String cmId,
             SocketCommunicationManager mgr) {
-        // TODO multiapp support, now as only one dontpush-atmosphere app can be
-        // server from a JVM!! Probably acceptable for most cases. Map should
-        // use session + app as key and handler should know which app it serves.
-        sessToMgr.put(sessionId, mgr);
+        sessToMgr.put(cmId, mgr);
     }
 
     public static SocketCommunicationManager getCommunicationManager(
-            String sessionId) {
-        return sessToMgr.get(sessionId);
+            String cmId) {
+        return sessToMgr.get(cmId);
+    }
+
+    public static void forgetCommunicationMananer(String id) {
+        sessToMgr.remove(id);
     }
 }

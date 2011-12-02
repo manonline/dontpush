@@ -16,12 +16,21 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.terminal.gwt.server.ApplicationServlet;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.ApplicationServlet;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.ui.Window;
 
 /**
  * Servlet that can upgrade request to websockets for more efficient client
@@ -37,6 +46,7 @@ import javax.servlet.http.HttpSession;
 public class DontPushOzoneServlet extends ApplicationServlet {
 
     private Class<SocketCommunicationManager> communicationManagerClass;
+    private SocketCommunicationManager activeManager;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -61,4 +71,24 @@ public class DontPushOzoneServlet extends ApplicationServlet {
         }
         return cx;
     }
+    
+    /* 
+     * This is always called before writing the host page where we need the mgr id.
+     */
+    @Override
+    protected boolean handleURI(CommunicationManager applicationManager,
+            Window window, HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+        activeManager = (SocketCommunicationManager) applicationManager;
+        return super.handleURI(applicationManager, window, request, response);
+    }
+    
+    @Override
+    protected void writeAjaxPage(HttpServletRequest request,
+            HttpServletResponse response, Window window, Application application)
+            throws IOException, MalformedURLException, ServletException {
+        response.addCookie(new Cookie("OZONE_CM_ID", activeManager.getId()));
+        super.writeAjaxPage(request, response, window, application);
+    }
+    
 }
