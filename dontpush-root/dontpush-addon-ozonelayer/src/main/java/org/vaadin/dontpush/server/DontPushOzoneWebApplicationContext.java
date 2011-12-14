@@ -16,13 +16,13 @@
 
 package org.vaadin.dontpush.server;
 
-import java.util.Collection;
-import java.util.LinkedList;
-
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
+
+import java.util.Collection;
+import java.util.LinkedList;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
@@ -32,17 +32,17 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Web application context for Vaadin applications.
- * 
+ *
  * This is automatically added as a
  * {@link javax.servlet.http.HttpSessionBindingListener} when added to a
  * {@link javax.servlet.http.HttpSession}.
- * 
+ *
  * @author Mark Thomas
  */
 @SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
-    
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final transient Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<SocketCommunicationManager> communicationManagerClass;
     private Collection<SocketCommunicationManager> mgrs = new LinkedList<SocketCommunicationManager>();
 

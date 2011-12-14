@@ -16,6 +16,8 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.ui.Window;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
@@ -32,8 +34,6 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
 
-import com.vaadin.ui.Window;
-
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
     private Class<BroadcasterVaadinSocket> socketClass;
@@ -42,10 +42,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
         setSocketClass(servletConfig.getInitParameter("socketClass"));
-    }
-
-    public String getSocketClass() {
-        return this.socketClass == null ? null : this.socketClass.getName();
     }
 
     @SuppressWarnings("unchecked")
@@ -115,16 +111,14 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                 DefaultBroadcaster.class, key, true);
         resource.getAtmosphereResource().setBroadcaster(bc);
 
-        if (cm != null) {
-            VaadinWebSocket socket = cm.getSocketForWindow(window);
-            if (socket == null) {
-                socket = createSocket(bc, cm, window);
-                cm.setSocket(socket, window);
-            }
-            resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
-                    socket);
-            this.logger.debug("doComet: Connected to CM" + cmId);
+        VaadinWebSocket socket = cm.getSocketForWindow(window);
+        if (socket == null) {
+            socket = createSocket(bc, cm, window);
+            cm.setSocket(socket, window);
         }
+        resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
+                socket);
+        this.logger.debug("doComet: Connected to CM " + cmId + "; window " + windowName);
     }
 
     protected BroadcasterVaadinSocket createSocket(Broadcaster resource,
@@ -132,7 +126,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         if (this.socketClass != null) {
             try {
                 return this.socketClass.getConstructor(
-                        GwtAtmosphereResource.class,
+                        Broadcaster.class,
                         SocketCommunicationManager.class, Window.class)
                         .newInstance(resource, cm, window);
             } catch (Exception e) {

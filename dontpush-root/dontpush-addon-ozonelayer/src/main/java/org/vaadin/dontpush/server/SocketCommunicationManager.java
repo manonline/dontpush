@@ -16,8 +16,14 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.PaintException;
+import com.vaadin.terminal.Paintable.RepaintRequestEvent;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Window;
+
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,13 +32,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.Paintable.RepaintRequestEvent;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Window;
 
 /**
  * @author mattitahvonen
@@ -46,8 +45,8 @@ public class SocketCommunicationManager extends CommunicationManager {
     private final transient Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
     private String id;
     private Window activeUidlRequestWindow;
-    
-    private Set<Window> dirtyWindows = Collections.synchronizedSet(new HashSet<Window>());
+
+    private final Set<Window> dirtyWindows = new HashSet<Window>();
     private Thread thread;
 
     public SocketCommunicationManager(Application application) {
@@ -73,7 +72,9 @@ public class SocketCommunicationManager extends CommunicationManager {
             window = window.getParent();
         }
         if (this.activeUidlRequestWindow != window) {
-            dirtyWindows.add(window);
+            synchronized (this.dirtyWindows) {
+                this.dirtyWindows.add(window);
+            }
             deferPaintPhase();
         }
     }
@@ -84,7 +85,7 @@ public class SocketCommunicationManager extends CommunicationManager {
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 * 
+                 *
                  * TODO redesign the whole server side paint phase triggering.
                  * Probably the best if just a one thread that fires paints for app
                  * instances. NOTE that atmosphere may actually do some cool things
@@ -92,7 +93,7 @@ public class SocketCommunicationManager extends CommunicationManager {
                  * version.
                  */
                 private long RESPONSE_LATENCY = 3;
-                
+
                 @Override
                 public void run() {
                     try {
@@ -101,13 +102,14 @@ public class SocketCommunicationManager extends CommunicationManager {
                         // ignore
                     }
                     thread = null;
+                    Set<Window> copy;
                     synchronized (dirtyWindows) {
-                        for (Window w : dirtyWindows) {
-                            paintChanges(w);
-                        }
+                        copy = new HashSet<Window>(dirtyWindows);
+                        dirtyWindows.clear();
                     }
-                    dirtyWindows.clear();
-                    
+                    for (Window w : copy) {
+                        paintChanges(w);
+                    }
                 }
             };
             thread.start();
