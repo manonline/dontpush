@@ -56,4 +56,10 @@ VERSION 0.3.6
   * Shouldn't throw servlet exception when window is closed
   * Better multiwindow support
   * Some other smaller enhancements
+ 
+VERSION 0.3.7
+
+2011-12-02
+
+  * fixed custom socket implementations, broken since 0.3.6
   
