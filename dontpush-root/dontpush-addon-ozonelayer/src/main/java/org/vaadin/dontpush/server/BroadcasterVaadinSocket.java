@@ -69,7 +69,6 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
             throws IOException {
-        System.err.println("Painting window" + window.getName());
         final Application application = window.getApplication();
         if (!application.isRunning()) {
             String logoutUrl = application.getLogoutURL();
