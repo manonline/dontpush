@@ -59,7 +59,16 @@ VERSION 0.3.6
  
 VERSION 0.3.7
 
-2011-12-02
+2011-12-10
 
   * fixed custom socket implementations, broken since 0.3.6
+
+  VERSION 0.3.7
+
+2011-12-17
+
+  * fixed issues with emty requests
+  * fixed payload handling with # characters
+  * implemented rudimentary support for TransactionListeners and HttpServletRequestListener (faked request/response)
+
   
