@@ -101,7 +101,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         synchronized (cm.getApplication()) {
 
             String[] split = data.split("#");
-            String params = split[0];
+            String params = (split.length > 0 ? split[0] : "");
             boolean repaintAll = params.contains("repaintAll");
             if (repaintAll) {
                 this.cm.makeAllPaintablesDirty(this.window);
@@ -112,14 +112,13 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             if (split.length > 1) {
                 cm.setActiveWindow(window);
                 try {
-                    success = this.cm.handleVariableBurst(this, cm
-                            .getApplication(), true,
-                            (split.length > 1) ? split[1] : "");
+                    success = this.cm.handleVariableBurst(this, cm.getApplication(), true, split[1]);
                 } finally {
                     cm.setActiveWindow(null);
                 }
             } else {
                 this.cm.makeAllPaintablesDirty(this.window);
+                repaintAll = true;
             }
 
             try {
