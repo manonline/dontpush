@@ -69,6 +69,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
             throws IOException {
+        System.err.println("Painting window" + window.getName());
         final Application application = window.getApplication();
         if (!application.isRunning()) {
             String logoutUrl = application.getLogoutURL();
@@ -100,8 +101,10 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     public void handlePayload(String data) {
         synchronized (cm.getApplication()) {
 
-            String[] split = data.split("#");
-            String params = (split.length > 0 ? split[0] : "");
+            int paramEnd = data.indexOf("#");
+            String params = data.substring(0, paramEnd);
+
+            String payload = data.substring(paramEnd + 1);
             boolean repaintAll = params.contains("repaintAll");
             if (repaintAll) {
                 this.cm.makeAllPaintablesDirty(this.window);
@@ -109,16 +112,14 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             boolean analyzeLayouts = params.contains("analyzeLayouts");
             // TODO handle various special variables (request params in std xhr)
             boolean success = true;
-            if (split.length > 1) {
+            if(!payload.isEmpty()) {
                 cm.setActiveWindow(window);
                 try {
-                    success = this.cm.handleVariableBurst(this, cm.getApplication(), true, split[1]);
+                    success = this.cm.handleVariableBurst(this,
+                            cm.getApplication(), true, payload);
                 } finally {
                     cm.setActiveWindow(null);
                 }
-            } else {
-                this.cm.makeAllPaintablesDirty(this.window);
-                repaintAll = true;
             }
 
             try {
