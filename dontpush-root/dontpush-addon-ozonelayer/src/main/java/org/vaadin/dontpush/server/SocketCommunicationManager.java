@@ -16,13 +16,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.Paintable.RepaintRequestEvent;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Window;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +25,13 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.PaintException;
+import com.vaadin.terminal.Paintable.RepaintRequestEvent;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Window;
 
 /**
  * @author mattitahvonen
@@ -80,17 +80,17 @@ public class SocketCommunicationManager extends CommunicationManager {
     }
 
     private void deferPaintPhase() {
-        if(thread == null) {
+        if (thread == null) {
             thread = new Thread() {
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 *
+                 * 
                  * TODO redesign the whole server side paint phase triggering.
-                 * Probably the best if just a one thread that fires paints for app
-                 * instances. NOTE that atmosphere may actually do some cool things
-                 * for us alreay. This may actually be obsolete in atmosphere
-                 * version.
+                 * Probably the best if just a one thread that fires paints for
+                 * app instances. NOTE that atmosphere may actually do some cool
+                 * things for us alreay. This may actually be obsolete in
+                 * atmosphere version.
                  */
                 private long RESPONSE_LATENCY = 3;
 
@@ -118,13 +118,19 @@ public class SocketCommunicationManager extends CommunicationManager {
 
     protected void paintChanges(Window window) {
         synchronized (getApplication()) {
+            DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) getApplication()
+                    .getContext();
+            context.trxStart(getApplication(), getSocketForWindow(window));
             try {
                 getSocketForWindow(window).paintChanges(false, false);
             } catch (PaintException e) {
                 this.logger.error("Paint failed", e);
             } catch (IOException e) {
                 this.logger.error("Paint failed (IO)", e);
+            } finally {
+                context.trxEnd(getApplication(), getSocketForWindow(window));
             }
+
         }
     }
 

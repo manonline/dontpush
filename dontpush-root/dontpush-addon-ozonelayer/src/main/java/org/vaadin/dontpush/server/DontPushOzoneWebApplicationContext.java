@@ -19,11 +19,14 @@ package org.vaadin.dontpush.server;
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
 import java.util.Collection;
 import java.util.LinkedList;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionBindingEvent;
 
@@ -41,6 +44,8 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
+    private static final HttpServletResponse FAKE_RESPONSE = new FakeResponse();
+    private static final HttpServletRequest FAKE_REQUEST = new FakeRequest();
 
     private final transient Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<SocketCommunicationManager> communicationManagerClass;
@@ -88,5 +93,19 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
         for (SocketCommunicationManager mgr : mgrs) {
             AtmosphereDontPushHandler.forgetCommunicationMananer(mgr.getId());
         }
+    }
+    
+    public void trxStart(Application application, Object request) {
+        super.startTransaction(application, request);
+        if(application instanceof HttpServletRequestListener) {
+            ((HttpServletRequestListener) application).onRequestStart(FAKE_REQUEST, FAKE_RESPONSE);
+        }
+    }
+    
+    public void trxEnd(Application application, Object request) {
+        if(application instanceof HttpServletRequestListener) {
+            ((HttpServletRequestListener) application).onRequestEnd(FAKE_REQUEST, FAKE_RESPONSE);
+        }
+        super.endTransaction(application, request);
     }
 }
