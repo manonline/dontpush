@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>dontpush-addon-ozonelayer</artifactId>
-			<version>0.3.6</version>
+			<version>0.3.8</version>
 		</dependency>
 
 		<dependency>
