@@ -2,6 +2,7 @@ package org.vaadin.dontpush.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -168,6 +169,22 @@ public class FakeResponse implements HttpServletResponse {
     public void setStatus(int sc, String sm) {
         // TODO Auto-generated method stub
 
+    }
+
+    public int getStatus() {
+        return 0;
+    }
+
+    public String getHeader(String name) {
+        return null;
+    }
+
+    public Collection<String> getHeaders(String name) {
+        return null;
+    }
+
+    public Collection<String> getHeaderNames() {
+        return null;
     }
 
 }
