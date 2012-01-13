@@ -16,6 +16,13 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.PaintException;
+import com.vaadin.terminal.Paintable.RepaintRequestEvent;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Window;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,13 +32,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.Paintable.RepaintRequestEvent;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Window;
 
 /**
  * @author mattitahvonen
@@ -68,6 +68,21 @@ public class SocketCommunicationManager extends CommunicationManager {
         super.repaintRequested(event);
         Component paintable = (Component) event.getPaintable();
         Window window = paintable.getWindow();
+
+        // Handle case where an application instance is re-used and any
+        // components removed from application now have null parent.
+        // Only manifests itself if the component receives data after being
+        // removed.
+        // Example: Component 'A' has a Container 'C' that listens to events
+        // from some global object 'O' (e.g. singleton Spring bean).  'A' is
+        // removed from application but 'C' is still a listener to events from
+        // 'O' and 'C' is still the container of 'A' and any repaints of 'C'
+        // will fail as it is no longer has a Window as its top-most parent
+        //
+        // See http://dev.vaadin.com/ticket/8262
+        if (window == null)
+            return;
+
         if (window.getParent() != null) {
             window = window.getParent();
         }
@@ -85,7 +100,7 @@ public class SocketCommunicationManager extends CommunicationManager {
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 * 
+                 *
                  * TODO redesign the whole server side paint phase triggering.
                  * Probably the best if just a one thread that fires paints for
                  * app instances. NOTE that atmosphere may actually do some cool
