@@ -8,9 +8,9 @@
     <packaging>jar</packaging>
     <name>dontpush ozone layer</name>
     <description>dontpush add-on based on atmosphere library</description>
-    
+
     <properties>
-    	<atmosphere.version>0.8.1</atmosphere.version>
+    	<atmosphere.version>0.8.3</atmosphere.version>
     </properties>
 
     <repositories>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin</artifactId>
-            <version>6.7.1</version>
+            <version>6.7.4</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
