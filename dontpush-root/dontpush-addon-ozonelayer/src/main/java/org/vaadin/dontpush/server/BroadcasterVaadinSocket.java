@@ -16,6 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,12 +30,6 @@ import java.io.PrintWriter;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -70,6 +70,11 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
             throws IOException {
         final Application application = window.getApplication();
+
+        // Handle case when closing a window that removes itself from the application
+        if (application == null)
+            return;
+
         if (!application.isRunning()) {
             String logoutUrl = application.getLogoutURL();
             if (logoutUrl == null) {
