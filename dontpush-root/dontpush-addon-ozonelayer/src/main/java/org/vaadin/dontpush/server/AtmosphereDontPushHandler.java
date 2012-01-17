@@ -60,8 +60,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
     @Override
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
-        BroadcasterVaadinSocket socket = resource
-                .getAttribute(BroadcasterVaadinSocket.class.getName());
+        BroadcasterVaadinSocket socket =
+          (BroadcasterVaadinSocket)resource.getSession().getAttribute("" + resource.getConnectionID());
         if (socket != null) {
             String data = message.toString();
             socket.handlePayload(data);
@@ -116,8 +116,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             socket = createSocket(bc, cm, window);
             cm.setSocket(socket, window);
         }
-        resource.setAttribute(BroadcasterVaadinSocket.class.getName(),
-                socket);
+        resource.getSession().setAttribute("" + resource.getConnectionID(), socket);
         this.logger.debug("doComet: Connected to CM " + cmId + "; window " + windowName);
     }
 
