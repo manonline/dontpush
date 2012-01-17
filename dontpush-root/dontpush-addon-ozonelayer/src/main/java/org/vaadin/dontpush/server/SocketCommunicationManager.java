@@ -69,10 +69,8 @@ public class SocketCommunicationManager extends CommunicationManager {
         Component paintable = (Component) event.getPaintable();
         Window window = paintable.getWindow();
 
-        // Handle case where an application instance is re-used and any
-        // components removed from application now have null parent.
-        // Only manifests itself if the component receives data after being
-        // removed.
+        // Handle case where components that are referenced by some
+        // other object and have been removed from application receive data.
         // Example: Component 'A' has a Container 'C' that listens to events
         // from some global object 'O' (e.g. singleton Spring bean).  'A' is
         // removed from application but 'C' is still a listener to events from
