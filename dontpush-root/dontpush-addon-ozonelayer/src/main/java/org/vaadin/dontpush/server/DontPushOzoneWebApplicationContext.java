@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
+    
+    // TODO build Servlet 3.0/JEE6 versions of these too and use if one can be instantiated
     private static final HttpServletResponse FAKE_RESPONSE = new FakeResponse();
     private static final HttpServletRequest FAKE_REQUEST = new FakeRequest();
 
