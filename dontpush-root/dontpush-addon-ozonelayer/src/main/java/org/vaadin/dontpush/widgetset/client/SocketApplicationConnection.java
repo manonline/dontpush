@@ -17,6 +17,7 @@
 package org.vaadin.dontpush.widgetset.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.Cookies;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
@@ -149,6 +150,9 @@ public class SocketApplicationConnection extends ApplicationConnection {
     protected void makeUidlRequest(String requestData, String extraParams,
             boolean forceSync) {
         VConsole.log("new Socket message: " + requestData);
+        // Due to atmosphere bug/feature/whatever we need to urlencode the
+        // payload as well (linebreaks are not allowed in messages)
+        requestData = URL.encode(requestData);
         if (forceSync) {
             /*
              * TODO Check if this really works. Else we could send the last

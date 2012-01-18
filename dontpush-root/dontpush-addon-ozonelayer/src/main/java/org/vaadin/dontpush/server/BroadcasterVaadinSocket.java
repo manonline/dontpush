@@ -26,6 +26,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
@@ -113,7 +115,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 int paramEnd = data.indexOf("#");
                 String params = data.substring(0, paramEnd);
 
-                String payload = data.substring(paramEnd + 1);
+                String payload = URLDecoder.decode(data.substring(paramEnd + 1), "utf-8");
                 boolean repaintAll = params.contains("repaintAll");
                 if (repaintAll) {
                     this.cm.makeAllPaintablesDirty(this.window);
@@ -139,6 +141,8 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 } catch (IOException e) {
                     this.logger.error(e.getMessage(), e);
                 }
+            } catch (UnsupportedEncodingException e) {
+                this.logger.error(e.getMessage(), e);
             } finally {
                 context.trxEnd(cm.getApplication(), resource);
             }
