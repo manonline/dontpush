@@ -22,6 +22,9 @@ import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -45,9 +48,18 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     
-    // TODO build Servlet 3.0/JEE6 versions of these too and use if one can be instantiated
-    private static final HttpServletResponse FAKE_RESPONSE = new FakeResponse();
-    private static final HttpServletRequest FAKE_REQUEST = new FakeRequest();
+    private static final HttpServletResponse FAKE_RESPONSE;
+    private static final HttpServletRequest FAKE_REQUEST;
+    static {
+        InvocationHandler dummyHandler = new InvocationHandler() {
+            public Object invoke(Object arg0, Method arg1, Object[] arg2)
+                    throws Throwable {
+                return null;
+            }
+        };
+        FAKE_REQUEST = (HttpServletRequest) Proxy.newProxyInstance(HttpServletRequest.class.getClassLoader(), new Class[] {HttpServletRequest.class}, dummyHandler);
+        FAKE_RESPONSE= (HttpServletResponse) Proxy.newProxyInstance(HttpServletResponse.class.getClassLoader(), new Class[] {HttpServletResponse.class}, dummyHandler);
+    }
 
     private final transient Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<SocketCommunicationManager> communicationManagerClass;
