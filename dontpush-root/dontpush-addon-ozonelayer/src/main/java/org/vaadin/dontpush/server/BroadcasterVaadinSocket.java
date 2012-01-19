@@ -91,7 +91,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                     this.window, analyzeLayouts);
             out.flush();
         } catch (Exception e) {
-            e.printStackTrace();
+            this.logger.error(e.getMessage(), e);
         } finally {
             if (out != null) {
                 out.close();
