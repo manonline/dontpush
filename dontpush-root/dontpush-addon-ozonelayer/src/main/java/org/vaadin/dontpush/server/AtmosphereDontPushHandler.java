@@ -18,16 +18,22 @@ package org.vaadin.dontpush.server;
 
 import com.vaadin.ui.Window;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.DefaultBroadcaster;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
@@ -36,7 +42,10 @@ import org.atmosphere.gwt.server.GwtAtmosphereResource;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
+    private static final ThreadLocal<BroadcasterVaadinSocket> CURRENT_SOCKET = new ThreadLocal<BroadcasterVaadinSocket>();
     private Class<BroadcasterVaadinSocket> socketClass;
+    private final Map<GwtAtmosphereResource, BroadcasterVaadinSocket> resourceSocketMap =
+      new WeakHashMap<GwtAtmosphereResource, BroadcasterVaadinSocket>();
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -59,9 +68,31 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     }
 
     @Override
+    protected void doServerMessage(BufferedReader data, int connectionID) {
+        GwtAtmosphereResource resource = lookupResource(connectionID);
+        if (resource == null) {
+            return;
+        }
+        try {
+            BroadcasterVaadinSocket socket = this.resourceSocketMap.get(resource);
+            CURRENT_SOCKET.set(socket);
+            super.doServerMessage(data, connectionID);
+        } finally {
+            CURRENT_SOCKET.remove();
+        }
+    }
+
+    // TODO: should
+    private void cleanup(GwtAtmosphereResource resource) {
+        this.resourceSocketMap.remove(resource);
+        this.logger.debug("Have " + this.resourceSocketMap.size() + " sockets after removal of resource `"
+          + resource.getConnectionID() + "'");
+        // other cleanup???
+    }
+
+    @Override
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
-        BroadcasterVaadinSocket socket =
-          (BroadcasterVaadinSocket)resource.getSession().getAttribute("" + resource.getConnectionID());
+        BroadcasterVaadinSocket socket = CURRENT_SOCKET.get();
         if (socket != null) {
             String data = message.toString();
             socket.handlePayload(data);
@@ -77,7 +108,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         return NO_TIMEOUT;
     }
 
-    private void establishConnection(GwtAtmosphereResource resource) {
+    private void establishConnection(final GwtAtmosphereResource resource) {
         final String path = resource.getRequest().getPathInfo();
         String[] split = path.split("/");
         String cmId = split[1];
@@ -110,13 +141,39 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         final Broadcaster bc = DefaultBroadcasterFactory.getDefault().lookup(
                 DefaultBroadcaster.class, key, true);
         resource.getAtmosphereResource().setBroadcaster(bc);
+        resource.getAtmosphereResource().addEventListener(new AtmosphereResourceEventListenerAdapter() {
+
+            public void onSuspend(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+                logger.debug("connection suspended");
+                logger.debug("Have " + resourceSocketMap.size() + " sockets after suspend");
+            }
+
+            public void onResume(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+                logger.debug("connection resumed");
+                // cannot call cleanup here as this event is fired before we process data for window close events; thus, if we remove it
+                // the UIDL for the close event will never get processed ;0(
+                // TODO: maybe remove after some fixed delay
+
+                logger.debug("Have " + resourceSocketMap.size() + " sockets after resume");
+            }
+
+            public void onDisconnect(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+                logger.debug("connection disconnected; cleaning up");
+                cleanup(resource);
+            }
+
+            public void onThrowable(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+                logger.debug("connection thre exception; cleaning up", event.throwable());
+                cleanup(resource);
+            }
+        });
 
         VaadinWebSocket socket = cm.getSocketForWindow(window);
         if (socket == null) {
             socket = createSocket(bc, cm, window);
             cm.setSocket(socket, window);
         }
-        resource.getSession().setAttribute("" + resource.getConnectionID(), socket);
+        this.resourceSocketMap.put(resource, (BroadcasterVaadinSocket)socket);
         this.logger.debug("doComet: Connected to CM " + cmId + "; window " + windowName);
     }
 
