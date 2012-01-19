@@ -73,11 +73,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             throws IOException {
         final Application application = window.getApplication();
 
-        // Handle case when closing a window that removes itself from the application
-        if (application == null)
-            return;
-
-        if (!application.isRunning()) {
+        if (application != null && !application.isRunning()) {
             String logoutUrl = application.getLogoutURL();
             if (logoutUrl == null) {
                 logoutUrl = application.getURL().toString();
