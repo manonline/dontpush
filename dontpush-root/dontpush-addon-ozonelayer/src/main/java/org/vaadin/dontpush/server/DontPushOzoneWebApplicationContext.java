@@ -16,12 +16,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -36,18 +30,25 @@ import javax.servlet.http.HttpSessionBindingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.terminal.gwt.server.DontPushWebBrowser;
+import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+
 /**
  * Web application context for Vaadin applications.
- *
+ * 
  * This is automatically added as a
  * {@link javax.servlet.http.HttpSessionBindingListener} when added to a
  * {@link javax.servlet.http.HttpSession}.
- *
+ * 
  * @author Mark Thomas
  */
 @SuppressWarnings("serial")
 public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
-    
+
     private static final HttpServletResponse FAKE_RESPONSE;
     private static final HttpServletRequest FAKE_REQUEST;
     static {
@@ -57,8 +58,12 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
                 return null;
             }
         };
-        FAKE_REQUEST = (HttpServletRequest) Proxy.newProxyInstance(HttpServletRequest.class.getClassLoader(), new Class[] {HttpServletRequest.class}, dummyHandler);
-        FAKE_RESPONSE= (HttpServletResponse) Proxy.newProxyInstance(HttpServletResponse.class.getClassLoader(), new Class[] {HttpServletResponse.class}, dummyHandler);
+        FAKE_REQUEST = (HttpServletRequest) Proxy.newProxyInstance(
+                HttpServletRequest.class.getClassLoader(),
+                new Class[] { HttpServletRequest.class }, dummyHandler);
+        FAKE_RESPONSE = (HttpServletResponse) Proxy.newProxyInstance(
+                HttpServletResponse.class.getClassLoader(),
+                new Class[] { HttpServletResponse.class }, dummyHandler);
     }
 
     private final transient Logger logger = LoggerFactory.getLogger(getClass());
@@ -70,6 +75,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
         super();
         this.session = session;
         this.communicationManagerClass = communicationManagerClass;
+        browser = new DontPushWebBrowser();
     }
 
     @Override
@@ -93,9 +99,8 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
             }
             this.session.setAttribute(
                     SocketCommunicationManager.class.getName(), mgr);
-            AtmosphereDontPushHandler.setCommunicationManager(mgr.getId(),
-                    mgr);
-            mgrs .add(mgr);
+            AtmosphereDontPushHandler.setCommunicationManager(mgr.getId(), mgr);
+            mgrs.add(mgr);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }
         return mgr;
@@ -108,18 +113,25 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
             AtmosphereDontPushHandler.forgetCommunicationMananer(mgr.getId());
         }
     }
-    
+
     public void trxStart(Application application, Object request) {
         super.startTransaction(application, request);
-        if(application instanceof HttpServletRequestListener) {
-            ((HttpServletRequestListener) application).onRequestStart(FAKE_REQUEST, FAKE_RESPONSE);
+        if (application instanceof HttpServletRequestListener) {
+            ((HttpServletRequestListener) application).onRequestStart(
+                    FAKE_REQUEST, FAKE_RESPONSE);
         }
     }
-    
+
     public void trxEnd(Application application, Object request) {
-        if(application instanceof HttpServletRequestListener) {
-            ((HttpServletRequestListener) application).onRequestEnd(FAKE_REQUEST, FAKE_RESPONSE);
+        if (application instanceof HttpServletRequestListener) {
+            ((HttpServletRequestListener) application).onRequestEnd(
+                    FAKE_REQUEST, FAKE_RESPONSE);
         }
         super.endTransaction(application, request);
+    }
+
+    @Override
+    public DontPushWebBrowser getBrowser() {
+        return (DontPushWebBrowser) super.getBrowser();
     }
 }

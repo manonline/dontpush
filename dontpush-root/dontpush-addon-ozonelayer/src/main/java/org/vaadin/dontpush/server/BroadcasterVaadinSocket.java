@@ -16,12 +16,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +26,13 @@ import java.net.URLDecoder;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.terminal.gwt.server.DontPushWebBrowser;
+import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -104,45 +105,60 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         synchronized (cm.getApplication()) {
 
             final Application app = cm.getApplication();
-            DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext)
-                    app.getContext();
-            context.trxStart(app, this);
+            DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) app
+                    .getContext();
+            int paramEnd = data.indexOf("#");
+            String params = data.substring(0, paramEnd);
             try {
-                int paramEnd = data.indexOf("#");
-                String params = data.substring(0, paramEnd);
-
-                String payload = URLDecoder.decode(data.substring(paramEnd + 1), "utf-8");
+                String payload = URLDecoder.decode(
+                        data.substring(paramEnd + 1), "utf-8");
                 boolean repaintAll = params.contains("repaintAll");
                 if (repaintAll) {
-                    this.cm.makeAllPaintablesDirty(this.window);
+                    updateBrowserProperties(params);
                 }
-                boolean analyzeLayouts = params.contains("analyzeLayouts");
-                // TODO handle various special variables (request params in std
-                // xhr)
-                boolean success = true;
-                if (!payload.isEmpty()) {
-                    cm.setActiveWindow(window);
-                    try {
-                        success = this.cm.handleVariableBurst(this,
-                                cm.getApplication(), true, payload);
-                    } finally {
-                        cm.setActiveWindow(null);
-                    }
-                }
-
                 try {
-                    if (success) {
-                        paintChanges(repaintAll, analyzeLayouts);
+                    context.trxStart(app, this);
+
+                    if (repaintAll) {
+                        this.cm.makeAllPaintablesDirty(this.window);
                     }
-                } catch (IOException e) {
-                    this.logger.error(e.getMessage(), e);
+                    boolean analyzeLayouts = params.contains("analyzeLayouts");
+                    // TODO handle various special variables (request params in
+                    // std
+                    // xhr)
+                    boolean success = true;
+                    if (!payload.isEmpty()) {
+                        cm.setActiveWindow(window);
+                        try {
+                            success = this.cm.handleVariableBurst(this,
+                                    cm.getApplication(), true, payload);
+                        } finally {
+                            cm.setActiveWindow(null);
+                        }
+                    }
+
+                    try {
+                        if (success) {
+                            paintChanges(repaintAll, analyzeLayouts);
+                        }
+                    } catch (IOException e) {
+                        this.logger.error(e.getMessage(), e);
+                    }
+                } finally {
+                    context.trxEnd(cm.getApplication(), resource);
                 }
             } catch (UnsupportedEncodingException e) {
                 this.logger.error(e.getMessage(), e);
-            } finally {
-                context.trxEnd(cm.getApplication(), resource);
             }
+
         }
+    }
+
+    private void updateBrowserProperties(String params) {
+        DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) cm
+                .getApplication().getContext();
+        DontPushWebBrowser browser = context.getBrowser();
+        browser.updateClientSideDetails(params);
     }
 
 }
