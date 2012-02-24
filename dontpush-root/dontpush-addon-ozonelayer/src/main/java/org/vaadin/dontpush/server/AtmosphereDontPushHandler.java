@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -215,5 +216,41 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
     public static void forgetCommunicationMananer(String id) {
         sessToMgr.remove(id);
+    }
+
+    @Override
+    protected void reapResources() {
+        super.reapResources();
+        for (Iterator<GwtAtmosphereResource> iter = this.resourceSocketMap.keySet().iterator(); iter.hasNext(); ) {
+            GwtAtmosphereResource resource = iter.next();
+            if (!resource.isAlive()) {
+                iter.remove();
+            }
+        }
+    }
+
+    /**
+     * This can be used to lookup a resource for instance if you are implementing a remote service call
+     * You will need to pass the connectionID, which you can pass as an url parameter {getConnectionID()} or
+     * directly in your remote call
+     *
+     * @param connectionId
+     * @return
+     */
+    @Override
+    protected GwtAtmosphereResource lookupResource(int connectionId) {
+        GwtAtmosphereResource r = null;
+        try {
+            r = super.lookupResource(connectionId);
+        } catch (NullPointerException npe) {
+            this.logger.warn("doServerMessage called before doCometImpl. Application server must have been restarted while "
+              + "clients were active");
+        }
+        if (r != null) {
+            return r;
+        } else {
+            this.logger.info("Failed to find resource for [" + connectionId + "]");
+        }
+        return null;
     }
 }
