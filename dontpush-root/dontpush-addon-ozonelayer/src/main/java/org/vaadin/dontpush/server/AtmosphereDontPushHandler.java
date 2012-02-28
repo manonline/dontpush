@@ -71,7 +71,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     @Override
     protected void doServerMessage(BufferedReader data, int connectionID) {
         GwtAtmosphereResource resource = lookupResource(connectionID);
-        if (resource == null) {
+        if (resource == null || !resource.isAlive()) {
             return;
         }
         try {
@@ -86,8 +86,10 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     // TODO: should
     private void cleanup(GwtAtmosphereResource resource) {
         this.resourceSocketMap.remove(resource);
-        this.logger.debug("Have " + this.resourceSocketMap.size() + " sockets after removal of resource `"
-          + resource.getConnectionID() + "'");
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace("Have " + this.resourceSocketMap.size() + " sockets after removal of resource `"
+              + resource.getConnectionID() + "'");
+        }
         // other cleanup???
     }
 
@@ -95,10 +97,14 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
         BroadcasterVaadinSocket socket = CURRENT_SOCKET.get();
         if (socket != null) {
-            String data = message.toString();
-            socket.handlePayload(data);
+            if (resource.isAlive()) {
+                String data = message.toString();
+                socket.handlePayload(data);
+            } else {
+                this.logger.info("Could not handle msg, resource is dead.");
+            }
         } else {
-            logger.info("Could not handle msg, cm not found. (non-functional) close request??");
+            this.logger.info("Could not handle msg, cm not found. (non-functional) close request??");
         }
     }
 
@@ -118,7 +124,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             this.logger
                     .debug("Couldn't establish connection, no CM found for this session "
                             + cmId);
-            // TODO can happen e.g. server restart, should cause relaod, now
+            // TODO can happen e.g. server restart, should cause reload, now
             // dies silently?
             return;
         }
@@ -214,7 +220,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         return sessToMgr.get(cmId);
     }
 
-    public static void forgetCommunicationMananer(String id) {
+    public static void forgetCommunicationManager(String id) {
         sessToMgr.remove(id);
     }
 
@@ -226,6 +232,9 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             if (!resource.isAlive()) {
                 iter.remove();
             }
+        }
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace("Have " + this.resourceSocketMap.size() + " resources after reaping the dead.");
         }
     }
 

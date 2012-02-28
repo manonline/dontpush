@@ -39,11 +39,11 @@ import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
 /**
  * Web application context for Vaadin applications.
- * 
+ *
  * This is automatically added as a
  * {@link javax.servlet.http.HttpSessionBindingListener} when added to a
  * {@link javax.servlet.http.HttpSession}.
- * 
+ *
  * @author Mark Thomas
  */
 @SuppressWarnings("serial")
@@ -110,7 +110,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     public void valueUnbound(HttpSessionBindingEvent event) {
         super.valueUnbound(event);
         for (SocketCommunicationManager mgr : mgrs) {
-            AtmosphereDontPushHandler.forgetCommunicationMananer(mgr.getId());
+            AtmosphereDontPushHandler.forgetCommunicationManager(mgr.getId());
         }
     }
 
