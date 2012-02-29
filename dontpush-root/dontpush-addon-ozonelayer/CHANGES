@@ -78,3 +78,17 @@ VERSION 0.3.10
   * Now supports Atmosphere 0.8.4
   * fixed issue where widgets with no application remained in list of paintables
   * fixed issue where window close listeners would not be called
+
+VERSION 0.3.11
+
+2012-02-16
+
+  * Now supports Atmosphere 0.8.5
+  * Client detected browser details (like window size, timezone etc) are now available like with normal Vaadin setup.
+ 
+VERSION 0.3.12
+
+2012-02-29
+
+  * Better handling of data on "dead" connections. In practice this means cleaner log messages in random cases when user leaves page.
+  

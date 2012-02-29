@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Vaadin-Package-Version: 1
+Vaadin-Addon: dontpush-addon-ozonelayer-${project.version}.jar
+Implementation-Vendor: Matti Tahvonen, Mark Thomas
+Implementation-Title: DontPush OzoneLayer
+Implementation-Version: ${project.version}
