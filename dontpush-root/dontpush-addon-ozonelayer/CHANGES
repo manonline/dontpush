@@ -91,4 +91,7 @@ VERSION 0.3.12
 2012-02-29
 
   * Better handling of data on "dead" connections. In practice this means cleaner log messages in random cases when user leaves page.
-  
+
+VERSION 0.3.13
+2012-03-1
+  * No functional changes, the installation package from vaadin.com/directory now just includes required dependencies for non-maven (or other sane build system) users.  

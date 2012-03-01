@@ -19,6 +19,13 @@
         <include>*-${project.version}*.jar</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>./target/libs</directory>
+      <outputDirectory>./lib</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
   </fileSets>
 
   <files>
@@ -26,6 +33,9 @@
       <source>./MANIFEST.MF</source>
       <outputDirectory>META-INF</outputDirectory>
       <filtered>true</filtered>
+    </file>
+    <file>
+      <source>./README</source>
     </file>
   </files>
 </assembly>
