@@ -36,6 +36,8 @@ import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
+    private static final int MAX_MSG_LENGHT = 1024*7; // 8kb WILL FAIL ON WEBSOCKETS !?
+    
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected Broadcaster resource;
     protected SocketCommunicationManager cm;
@@ -79,7 +81,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             if (logoutUrl == null) {
                 logoutUrl = application.getURL().toString();
             }
-            final String msg = "\"redirect\": {\"url\": \"" + logoutUrl + "\"}";
+            final String msg = "\"redirect\": {\"url\": \"" + logoutUrl + "\"}OZONEEND";
             this.resource.broadcast(msg);
             return;
         }
@@ -90,15 +92,25 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             out = new PrintWriter(os);
             this.cm.writeUidlResponce(this.callBack, repaintAll, out,
                     this.window, analyzeLayouts);
-            out.flush();
         } catch (Exception e) {
             this.logger.error(e.getMessage(), e);
         } finally {
             if (out != null) {
+                out.print("OZONEEND");
+                out.flush();
                 out.close();
             }
         }
-        this.resource.broadcast(new String(os.toByteArray()));
+        byte[] byteArray = os.toByteArray();
+        String tmp = new String(byteArray, "UTF-8");
+        int sent = 0;
+        while(sent < byteArray.length) {
+            int bufsize = Math.min(byteArray.length - sent, MAX_MSG_LENGHT);
+            byte[] buf = new byte[bufsize];
+            System.arraycopy(byteArray, sent, buf, 0, bufsize);
+            this.resource.broadcast(new String(buf, "UTF-8"));
+            sent += bufsize;
+        }
     }
 
     public void handlePayload(String data) {

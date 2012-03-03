@@ -45,6 +45,9 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
     private AtmosphereListener _cb = new AtmosphereListener() {
 
+        StringBuilder msg = new StringBuilder();
+        boolean msgOpen;
+
         public void onConnected(int heartbeat, int connectionID) {
             VConsole.log("WS Connected");
             if (!applicationRunning) {
@@ -77,25 +80,49 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
 
         public void onMessage(List<? extends Serializable> messages) {
+            if (!ownRequestPending) {
+                startRequest();
+                VConsole.log("Changeset pushed by the server");
+            }
             for (Serializable serializable : messages) {
                 String message = serializable.toString();
                 VConsole.log("message");
-                if (!ownRequestPending) {
-                    startRequest();
-                    VConsole.log("Changeset pushed by the server");
-                } else {
-                    ownRequestPending = false;
-                }
+
                 final Date start = new Date();
-                message = "{" + message + "}";
-                VConsole.log("Received socket message:");
-                ValueMap json = evaluateUIDL(message);
-                if (applicationRunning) {
-                    handleUIDLMessage(start, message, json);
-                } else {
-                    applicationRunning = true;
-                    handleWhenCSSLoaded(message, json);
-                    ApplicationConfiguration.startNextApplication();
+                if (!msgOpen) {
+                    msg.append("{");
+                    msgOpen = true;
+                }
+                boolean terminated = message.endsWith("OZONEEND");
+                if (terminated) {
+                    message = message.substring(0, message.length()
+                            - "OZONEEND".length());
+                }
+                msg.append(message);
+                if (terminated) {
+                    // TODO add some sort of sequence number so we could check
+                    // whether this was really anwer to out request or message
+                    // pushed by server
+                    ownRequestPending = false;
+                    msg.append("}");
+                    message = msg.toString();
+                    msg = new StringBuilder();
+                    msgOpen = false;
+                    try {
+                        VConsole.log("Received socket message...");
+                        ValueMap json = evaluateUIDL(message);
+                        if (applicationRunning) {
+                            handleUIDLMessage(start, message, json);
+                        } else {
+                            applicationRunning = true;
+                            handleWhenCSSLoaded(message, json);
+                            ApplicationConfiguration.startNextApplication();
+                        }
+                    } catch (Exception e) {
+                        VConsole.log("Received socket message, but parsing failed!");
+                        VConsole.log(message);
+                        showCommunicationError("Communication failed!");
+                    }
                 }
             }
 
@@ -149,7 +176,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
     @Override
     protected void makeUidlRequest(String requestData, String extraParams,
             boolean forceSync) {
-        VConsole.log("new Socket message: " + requestData);
+        VConsole.log("->SERVER:" + requestData + " p" + extraParams);
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
         requestData = URL.encode(requestData);
