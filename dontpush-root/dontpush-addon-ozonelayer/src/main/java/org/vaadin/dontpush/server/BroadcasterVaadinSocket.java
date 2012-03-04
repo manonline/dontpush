@@ -22,7 +22,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Collection;
 
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +38,9 @@ import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
-    private static final int MAX_MSG_LENGHT = 1024*7; // 8kb WILL FAIL ON WEBSOCKETS !?
-    
+    private static final int MAX_MSG_LENGHT = 1024 * 7; // 8kb WILL FAIL ON
+                                                        // WEBSOCKETS !?
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected Broadcaster resource;
     protected SocketCommunicationManager cm;
@@ -74,6 +77,13 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
             throws IOException {
+        if (resource.getAtmosphereResources().isEmpty()) {
+            logger.debug("No active listeners for window being "
+                    + "painted. Skipping paint phase to keep"
+                    + " the client in sync.");
+            return;
+        }
+
         final Application application = window.getApplication();
 
         if (application != null && !application.isRunning()) {
@@ -81,7 +91,8 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             if (logoutUrl == null) {
                 logoutUrl = application.getURL().toString();
             }
-            final String msg = "\"redirect\": {\"url\": \"" + logoutUrl + "\"}OZONEEND";
+            final String msg = "\"redirect\": {\"url\": \"" + logoutUrl
+                    + "\"}OZONEEND";
             this.resource.broadcast(msg);
             return;
         }
@@ -102,13 +113,12 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             }
         }
         byte[] byteArray = os.toByteArray();
-        String tmp = new String(byteArray, "UTF-8");
         int sent = 0;
-        while(sent < byteArray.length) {
+        while (sent < byteArray.length) {
             int bufsize = Math.min(byteArray.length - sent, MAX_MSG_LENGHT);
             byte[] buf = new byte[bufsize];
             System.arraycopy(byteArray, sent, buf, 0, bufsize);
-            this.resource.broadcast(new String(buf, "UTF-8"));
+            this.resource.broadcast(new String(buf));
             sent += bufsize;
         }
     }
