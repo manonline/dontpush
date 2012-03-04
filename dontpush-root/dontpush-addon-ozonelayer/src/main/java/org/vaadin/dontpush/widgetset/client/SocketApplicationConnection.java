@@ -54,8 +54,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             if (!applicationRunning) {
                 repaintAll();
             } else if (visitServerOnConnect) {
-                visitServerOnConnect = false;
-                // reconnecting, ensure we get sane answers
+                // reconnecting, ensure we get sane answers and up to date state
                 sendPendingVariableChanges();
             } else {
                 getConnectionGuard().connected();
@@ -197,6 +196,13 @@ public class SocketApplicationConnection extends ApplicationConnection {
     @Override
     protected void makeUidlRequest(String requestData, String extraParams,
             boolean forceSync) {
+        if (visitServerOnConnect) {
+            // TODO atmosphere should keep track of unsent changes for us ? GWT
+            // atmosphere or our usage issue? Now repainting to make sure state
+            // is in sync, but that may be bit expensive in some cases.
+            visitServerOnConnect = false;
+            extraParams = "repaintAll=1";
+        }
         VConsole.log("->SERVER:" + requestData + " p" + extraParams);
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
@@ -245,7 +251,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
     @Override
     public void sendPendingVariableChanges() {
         // leave stuff in queue if no active connection
-        if(applicationRunning && ws != null && ws.isRunning()) {
+        if (applicationRunning && ws != null && ws.isRunning()) {
             super.sendPendingVariableChanges();
         }
     }

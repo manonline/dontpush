@@ -135,7 +135,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 String payload = URLDecoder.decode(
                         data.substring(paramEnd + 1), "utf-8");
                 boolean repaintAll = params.contains("repaintAll");
-                if (repaintAll) {
+                if (repaintAll && params.contains("&sh=")) {
                     updateBrowserProperties(params);
                 }
                 try {
