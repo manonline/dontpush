@@ -95,3 +95,10 @@ VERSION 0.3.12
 VERSION 0.3.13
 2012-03-1
   * No functional changes, the installation package from vaadin.com/directory now just includes required dependencies for non-maven (or other sane build system) users.  
+  
+VERSION 0.4.0
+2012-03-1
+  * Stability: Large messages are now split to into pieces. Fixes issues with with large UIDL responses (Atmosphere seems to clip them at 8kb on Websockets).
+  * Stability: Paint phase now skipped if now active listeners (e.g. during network blackout)
+  * Enhancement: "Connection Guard" now reports to user in case of connection issues.
+  * Now defaults to Atmosphere 0.8.6

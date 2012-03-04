@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<version>0.3.14-SNAPSHOT</version>
+	<version>0.4.1</version>
 	<groupId>org.vaadin</groupId>
 	<artifactId>dontpush-addon-ozonelayer</artifactId>
 	<packaging>jar</packaging>
@@ -10,7 +10,7 @@
 	<description>dontpush add-on based on atmosphere library</description>
 
 	<properties>
-		<atmosphere.version>0.8.5</atmosphere.version>
+		<atmosphere.version>0.8.6</atmosphere.version>
 	</properties>
 
 	<repositories>
