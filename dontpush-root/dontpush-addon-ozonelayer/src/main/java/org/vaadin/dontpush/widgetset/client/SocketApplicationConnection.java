@@ -16,22 +16,23 @@
 
 package org.vaadin.dontpush.widgetset.client;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.http.client.URL;
-import com.google.gwt.user.client.Cookies;
-import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
-import com.vaadin.terminal.gwt.client.ApplicationConnection;
-import com.vaadin.terminal.gwt.client.BrowserInfo;
-import com.vaadin.terminal.gwt.client.VConsole;
-import com.vaadin.terminal.gwt.client.ValueMap;
-import com.vaadin.terminal.gwt.client.WidgetSet;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 import org.atmosphere.gwt.client.AtmosphereClient;
 import org.atmosphere.gwt.client.AtmosphereListener;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.http.client.URL;
+import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.Window;
+import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
+import com.vaadin.terminal.gwt.client.ApplicationConnection;
+import com.vaadin.terminal.gwt.client.BrowserInfo;
+import com.vaadin.terminal.gwt.client.VConsole;
+import com.vaadin.terminal.gwt.client.ValueMap;
+import com.vaadin.terminal.gwt.client.WidgetSet;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
@@ -52,6 +53,12 @@ public class SocketApplicationConnection extends ApplicationConnection {
             VConsole.log("WS Connected");
             if (!applicationRunning) {
                 repaintAll();
+            } else if (visitServerOnConnect) {
+                visitServerOnConnect = false;
+                // reconnecting, ensure we get sane answers
+                sendPendingVariableChanges();
+            } else {
+                getConnectionGuard().connected();
             }
         }
 
@@ -64,11 +71,13 @@ public class SocketApplicationConnection extends ApplicationConnection {
             // reconnect is automatic
             // TODO I guess this should be configurable for different use cases
             // TODO how to handle windows forgotten open ?
+            getConnectionGuard().disconnected();
         }
 
         public void onError(Throwable exception, boolean connected) {
             VConsole.log("DEBUG: onError");
             VConsole.log(exception);
+            getConnectionGuard().errorOccured();
         }
 
         public void onHeartbeat() {
@@ -118,10 +127,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
                             handleWhenCSSLoaded(message, json);
                             ApplicationConfiguration.startNextApplication();
                         }
+                        getConnectionGuard().responseHandled();
                     } catch (Exception e) {
                         VConsole.log("Received socket message, but parsing failed!");
                         VConsole.log(message);
-                        showCommunicationError("Communication failed!");
+                        getConnectionGuard().parsingErrorOccured();
                     }
                 }
             }
@@ -129,11 +139,22 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
     };
 
+    private ConnectionGuard errorDisplay;
+    private boolean visitServerOnConnect;
+
     @Override
     public void init(WidgetSet widgetSet, ApplicationConfiguration cnf) {
         super.init(widgetSet, cnf);
         // First opening of WS will repaint all -> start the app
         getWebSocket();
+    }
+
+    private ConnectionGuard getConnectionGuard() {
+        if (errorDisplay == null) {
+            errorDisplay = GWT.create(ConnectionGuard.class);
+            errorDisplay.setSocketApplicationConnection(this);
+        }
+        return errorDisplay;
     }
 
     private AtmosphereClient getWebSocket() {
@@ -152,13 +173,13 @@ public class SocketApplicationConnection extends ApplicationConnection {
             url += cmid + "/" + getConfiguration().getInitialWindowName();
             VConsole.log(url);
 
-            boolean webkit = BrowserInfo.get().isWebkit();
+            boolean tryWithWebsockets = BrowserInfo.get().isWebkit();
             VConsole.log("Creating atmosphere client...");
             /*
              * Ask atmosphere guys to fix this. Automatic degrading from
              * websockets don't work in others but webkit.
              */
-            this.ws = new AtmosphereClient(url, null, _cb, webkit);
+            this.ws = new AtmosphereClient(url, null, _cb, tryWithWebsockets);
             VConsole.log("...starting...");
             this.ws.start();
         }
@@ -189,6 +210,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
         } else {
             startRequest();
             this.ownRequestPending = true;
+            getConnectionGuard().expectResponse();
             getWebSocket().broadcast(extraParams + "#" + requestData);
         }
     }
@@ -201,5 +223,31 @@ public class SocketApplicationConnection extends ApplicationConnection {
             return eval('(' + jsonText + ')');
         }
     }-*/;
+
+    public void goOffline() {
+        ws.stop();
+        if (ownRequestPending) {
+            endRequest();
+            ownRequestPending = false;
+        }
+    }
+
+    public void reconnect() {
+        visitServerOnConnect = true;
+        ws.start();
+    }
+
+    public void restart() {
+        String appUri = getAppUri() + "?restartApplication";
+        Window.Location.replace(appUri);
+    }
+
+    @Override
+    public void sendPendingVariableChanges() {
+        // leave stuff in queue if no active connection
+        if(applicationRunning && ws != null && ws.isRunning()) {
+            super.sendPendingVariableChanges();
+        }
+    }
 
 }
