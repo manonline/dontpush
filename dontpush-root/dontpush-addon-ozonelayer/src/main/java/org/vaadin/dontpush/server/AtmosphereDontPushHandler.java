@@ -20,6 +20,7 @@ import com.vaadin.ui.Window;
 import org.atmosphere.cpr.*;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
+import org.atmosphere.util.Version;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -66,9 +67,65 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         try {
             BroadcasterVaadinSocket socket = this.resourceSocketMap.get(resource);
             CURRENT_SOCKET.set(socket);
-            super.doServerMessage(data, connectionID);
+            if ("0.8.6".equals(Version.getDotedVersion()))
+                this.doServerMessage(resource, data, connectionID);
+            else
+                super.doServerMessage(data, connectionID);
         } finally {
             CURRENT_SOCKET.remove();
+        }
+    }
+
+    private void doServerMessage(GwtAtmosphereResource resource, BufferedReader data, int connectionID) {
+        List<Serializable> postMessages = new ArrayList<Serializable>();
+        try {
+            while (true) {
+                String event = data.readLine();
+                if (event == null) {
+                    break;
+                }
+                String messageData = data.readLine();
+                if (messageData == null) {
+                    break;
+                }
+                data.readLine();
+                if (logger.isTraceEnabled()) {
+                    logger.trace("[" + connectionID + "] Server message received: " + event + ";" + messageData.charAt(0));
+                }
+                if (event.equals("o")) {
+                    if (messageData.charAt(0) == 'p') {
+                        Serializable message = deserialize(messageData.substring(1));
+                        if (message != null) {
+                            postMessages.add(message);
+                        }
+                    } else if (messageData.charAt(0) == 'b') {
+                        Serializable message = deserialize(messageData.substring(1));
+                        broadcast(message, resource);
+                    }
+
+                } else if (event.equals("s")) {
+
+                    if (messageData.charAt(0) == 'p') {
+                        String message = messageData.substring(1);
+                        postMessages.add(message);
+                    } else if (messageData.charAt(0) == 'b') {
+                        Serializable message = messageData.substring(1);
+                        broadcast(message, resource);
+                    }
+
+                } else if (event.equals("c")) {
+
+                    if (messageData.equals("d")) {
+                        disconnect(resource);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("[" + connectionID + "] Failed to read", ex);
+        }
+
+        if (postMessages.size() > 0) {
+            post(postMessages, resource);
         }
     }
 
