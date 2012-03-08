@@ -22,6 +22,7 @@ import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.ui.Window;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 
 import javax.servlet.ServletConfig;
@@ -38,7 +39,7 @@ import javax.servlet.http.HttpSession;
  * TODO check if here is something generic for abstract super class among
  * various app servers. Or better yet, detect if we could use same servlet for
  * all servers and create app server specific parts dynamically.
- *
+ * 
  * @author mattitahvonen
  * @author Mark Thomas
  */
@@ -52,10 +53,12 @@ public class DontPushOzoneServlet extends ApplicationServlet {
     @SuppressWarnings("unchecked")
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String communicationManagerClassName = config.getInitParameter("communicationManagerClass");
+        String communicationManagerClassName = config
+                .getInitParameter("communicationManagerClass");
         if (communicationManagerClassName != null) {
             try {
-                this.communicationManagerClass = (Class<SocketCommunicationManager>)Class.forName(communicationManagerClassName);
+                this.communicationManagerClass = (Class<SocketCommunicationManager>) Class
+                        .forName(communicationManagerClassName);
             } catch (ClassNotFoundException e) {
                 this.communicationManagerClass = null;
             }
@@ -64,16 +67,19 @@ public class DontPushOzoneServlet extends ApplicationServlet {
 
     @Override
     protected WebApplicationContext getApplicationContext(HttpSession session) {
-        WebApplicationContext cx = (WebApplicationContext)session.getAttribute(WebApplicationContext.class.getName());
+        WebApplicationContext cx = (WebApplicationContext) session
+                .getAttribute(WebApplicationContext.class.getName());
         if (cx == null) {
-            cx = new DontPushOzoneWebApplicationContext(session, this.communicationManagerClass);
+            cx = new DontPushOzoneWebApplicationContext(session,
+                    this.communicationManagerClass);
             session.setAttribute(WebApplicationContext.class.getName(), cx);
         }
         return cx;
     }
 
     /*
-     * This is always called before writing the host page where we need the mgr id.
+     * This is always called before writing the host page where we need the mgr
+     * id.
      */
     @Override
     protected boolean handleURI(CommunicationManager applicationManager,
@@ -89,6 +95,18 @@ public class DontPushOzoneServlet extends ApplicationServlet {
             throws IOException, ServletException {
         response.addCookie(new Cookie("OZONE_CM_ID", activeManager.getId()));
         super.writeAjaxPage(request, response, window, application);
+    }
+
+    @Override
+    protected void writeAjaxPageHtmlHeader(BufferedWriter page, String title,
+            String themeUri, HttpServletRequest request) throws IOException {
+        super.writeAjaxPageHtmlHeader(page, title, themeUri, request);
+        String cGuardTimeout = getApplicationProperty("connectionGuardTimeout");
+        if (cGuardTimeout != null) {
+            int to = Integer.parseInt(cGuardTimeout);
+            page.write("<script type=\"text/javascript\">ozonelayerConnectionGuardTimeout = "
+                    + to + ";</script>");
+        }
     }
 
 }

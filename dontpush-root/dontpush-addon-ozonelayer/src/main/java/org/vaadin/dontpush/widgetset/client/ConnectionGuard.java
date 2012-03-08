@@ -6,6 +6,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ui.VOverlay;
 
 public class ConnectionGuard extends VOverlay {
@@ -27,7 +28,7 @@ public class ConnectionGuard extends VOverlay {
         }
     };
 
-    private final int RECONNECT_TIMEOUT = 2000;
+    private static final int DEFAULT_TIMEOUT = 5000;
 
     private SocketApplicationConnection ac;
 
@@ -37,12 +38,13 @@ public class ConnectionGuard extends VOverlay {
     private Button reconnect;
     private Button restart;
     private Button ignore;
+    private int timeout = -1;
 
     public ConnectionGuard() {
-        
+
         setAnimationEnabled(true);
         setAutoHideEnabled(false);
-        addStyleName("v-Notification v-Notification-error");
+        addStyleName("v-Notification v-Notification-error ozonelayer-guard");
         FlowPanel flowPanel = new FlowPanel();
         html = new HTML();
         flowPanel.add(html);
@@ -57,7 +59,7 @@ public class ConnectionGuard extends VOverlay {
                 ac.reconnect();
             }
         });
-        
+
         restart = new Button(RESTART_APP);
         restart.setTitle(RELOAD_TITLE);
         flowPanel.add(restart);
@@ -83,10 +85,35 @@ public class ConnectionGuard extends VOverlay {
 
     public void expectResponse() {
         if (!expectingResponse) {
-            t.schedule(RECONNECT_TIMEOUT);
+            t.schedule(getConnectionGuardTimeout());
             expectingResponse = true;
         }
     }
+
+    /**
+     * @return the time that {@link ConnectionGuard} lets waits for connection
+     *         to return or response to receive.
+     */
+    private int getConnectionGuardTimeout() {
+        if (timeout == -1) {
+            timeout = readFromPage() * 1000;
+            if (timeout < 0) {
+                timeout = DEFAULT_TIMEOUT;
+            } else {
+                VConsole.log("Custom ozonelayerConnectionGuardTimeout timeout value"
+                        + timeout);
+            }
+        }
+        return timeout;
+    }
+
+    private static native int readFromPage()
+    /*-{
+        if($wnd.ozonelayerConnectionGuardTimeout) {
+            return $wnd.ozonelayerConnectionGuardTimeout;
+        }
+        return -1;
+    }-*/;
 
     public void responseHandled() {
         expectingResponse = false;
@@ -97,7 +124,7 @@ public class ConnectionGuard extends VOverlay {
     }
 
     public void disconnected() {
-        t.schedule(RECONNECT_TIMEOUT);
+        t.schedule(getConnectionGuardTimeout());
     }
 
     public void connected() {
@@ -124,7 +151,7 @@ public class ConnectionGuard extends VOverlay {
         setMessage(MSG_BADRESPONSE);
         reconnect.setVisible(false);
     }
-    
+
     @Override
     public void hide() {
         super.hide();
