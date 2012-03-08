@@ -16,13 +16,6 @@
 
 package org.vaadin.dontpush.widgetset.client;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-
-import org.atmosphere.gwt.client.AtmosphereClient;
-import org.atmosphere.gwt.client.AtmosphereListener;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.Cookies;
@@ -34,9 +27,16 @@ import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 import com.vaadin.terminal.gwt.client.WidgetSet;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+import org.atmosphere.gwt.client.AtmosphereClient;
+import org.atmosphere.gwt.client.AtmosphereListener;
+
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- * 
+ *
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -88,10 +88,6 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
 
         public void onMessage(List<? extends Serializable> messages) {
-            if (!ownRequestPending) {
-                startRequest();
-                VConsole.log("Changeset pushed by the server");
-            }
             for (Serializable serializable : messages) {
                 String message = serializable.toString();
                 VConsole.log("message");
@@ -108,6 +104,10 @@ public class SocketApplicationConnection extends ApplicationConnection {
                 }
                 msg.append(message);
                 if (terminated) {
+                    if (!ownRequestPending) {
+                        startRequest();
+                        VConsole.log("Changeset pushed by the server");
+                    }
                     // TODO add some sort of sequence number so we could check
                     // whether this was really anwer to out request or message
                     // pushed by server
@@ -130,11 +130,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
                     } catch (Exception e) {
                         VConsole.log("Received socket message, but parsing failed!");
                         VConsole.log(message);
+                        VConsole.log(e);
                         getConnectionGuard().parsingErrorOccured();
                     }
                 }
             }
-
         }
     };
 
@@ -203,7 +203,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             visitServerOnConnect = false;
             extraParams = "repaintAll=1";
         }
-        VConsole.log("->SERVER:" + requestData + " p" + extraParams);
+        VConsole.log("->SERVER: " + requestData + "; p: " + extraParams + "; forceSync: " + forceSync);
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
         requestData = URL.encode(requestData);
