@@ -17,29 +17,18 @@
 package org.vaadin.dontpush.server;
 
 import com.vaadin.ui.Window;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import org.atmosphere.cpr.*;
+import org.atmosphere.gwt.server.AtmosphereGwtHandler;
+import org.atmosphere.gwt.server.GwtAtmosphereResource;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
-import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.DefaultBroadcaster;
-import org.atmosphere.cpr.DefaultBroadcasterFactory;
-import org.atmosphere.gwt.server.AtmosphereGwtHandler;
-import org.atmosphere.gwt.server.GwtAtmosphereResource;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
@@ -71,7 +60,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     @Override
     protected void doServerMessage(BufferedReader data, int connectionID) {
         GwtAtmosphereResource resource = lookupResource(connectionID);
-        if (resource == null || !resource.isAlive()) {
+        if (resource == null) {
             return;
         }
         try {
@@ -97,12 +86,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     public void broadcast(Serializable message, GwtAtmosphereResource resource) {
         BroadcasterVaadinSocket socket = CURRENT_SOCKET.get();
         if (socket != null) {
-            if (resource.isAlive()) {
-                String data = message.toString();
-                socket.handlePayload(data);
-            } else {
-                this.logger.info("Could not handle msg, resource is dead.");
-            }
+            String data = message.toString();
+            socket.handlePayload(data);
         } else {
             this.logger.info("Could not handle msg, cm not found. (non-functional) close request??");
         }
