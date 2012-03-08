@@ -41,6 +41,17 @@
 			<param-name>widgetset</param-name>
 			<param-value>org.vaadin.dontpush.demo.gwt.DontPushDemoWidgetset</param-value>
 		</init-param>
+
+		<init-param>
+			<description>This is optinal parameter that control the 
+			timeout before "Conection guard" is for end user. If you 
+			have lots of synchronous tasks that take long time, you might 
+			want to increase this value to avoid non-intentional red screens. 
+			Default value is 5 seconds.</description>
+			<param-name>connectionGuardTimeout</param-name>
+			<param-value>2</param-value>
+		</init-param>
+
 		<load-on-startup>2</load-on-startup>
 
 	</servlet>

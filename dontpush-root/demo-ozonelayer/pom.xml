@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>dontpush-addon-ozonelayer</artifactId>
-			<version>0.4.0</version>
+			<version>0.4.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
