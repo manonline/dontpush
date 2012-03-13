@@ -72,7 +72,7 @@ public class SocketCommunicationManager extends CommunicationManager {
         // Handle case where components that are referenced by some
         // other object and have been removed from application receive data.
         // Example: Component 'A' has a Container 'C' that listens to events
-        // from some global object 'O' (e.g. singleton Spring bean).  'A' is
+        // from some global object 'O' (e.g. singleton Spring bean). 'A' is
         // removed from application but 'C' is still a listener to events from
         // 'O' and 'C' is still the container of 'A' and any repaints of 'C'
         // will fail as it is no longer has a Window as its top-most parent
@@ -98,7 +98,7 @@ public class SocketCommunicationManager extends CommunicationManager {
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 *
+                 * 
                  * TODO redesign the whole server side paint phase triggering.
                  * Probably the best if just a one thread that fires paints for
                  * app instances. NOTE that atmosphere may actually do some cool
@@ -131,17 +131,20 @@ public class SocketCommunicationManager extends CommunicationManager {
 
     protected void paintChanges(Window window) {
         synchronized (getApplication()) {
-            DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) getApplication()
-                    .getContext();
-            context.trxStart(getApplication(), getSocketForWindow(window));
-            try {
-                getSocketForWindow(window).paintChanges(false, false);
-            } catch (PaintException e) {
-                this.logger.error("Paint failed", e);
-            } catch (IOException e) {
-                this.logger.error("Paint failed (IO)", e);
-            } finally {
-                context.trxEnd(getApplication(), getSocketForWindow(window));
+            VaadinWebSocket socketForWindow = getSocketForWindow(window);
+            if (socketForWindow != null) {
+                DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) getApplication()
+                        .getContext();
+                context.trxStart(getApplication(), getSocketForWindow(window));
+                try {
+                    socketForWindow.paintChanges(false, false);
+                } catch (PaintException e) {
+                    this.logger.error("Paint failed", e);
+                } catch (IOException e) {
+                    this.logger.error("Paint failed (IO)", e);
+                } finally {
+                    context.trxEnd(getApplication(), getSocketForWindow(window));
+                }
             }
 
         }
