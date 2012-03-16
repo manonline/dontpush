@@ -73,6 +73,13 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         this.cm = cm;
         this.window = window2;
     }
+    
+    /**
+     * @return the top level window for which this socket is tied to
+     */
+    public Window getWindow() {
+        return window;
+    }
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
             throws IOException {
