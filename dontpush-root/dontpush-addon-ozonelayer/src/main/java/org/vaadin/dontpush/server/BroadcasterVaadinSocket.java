@@ -22,9 +22,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Collection;
 
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,7 +176,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             } catch (UnsupportedEncodingException e) {
                 this.logger.error(e.getMessage(), e);
             }
-
+            cm.cleanDetachedWindows();
         }
     }
 
@@ -187,6 +185,10 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 .getApplication().getContext();
         DontPushWebBrowser browser = context.getBrowser();
         browser.updateClientSideDetails(params);
+    }
+
+    public void destroy() {
+        resource.destroy();
     }
 
 }

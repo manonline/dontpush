@@ -32,9 +32,11 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.ui.Window;
 
 /**
  * Web application context for Vaadin applications.
@@ -132,5 +134,14 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     @Override
     public DontPushWebBrowser getBrowser() {
         return (DontPushWebBrowser) super.getBrowser();
+    }
+    
+    @Override
+    protected void removeApplication(Application application) {
+        SocketCommunicationManager mgr = (SocketCommunicationManager) applicationToAjaxAppMgrMap.get(application);
+        if(mgr != null) {
+            mgr.destroy();
+        }
+        super.removeApplication(application);
     }
 }

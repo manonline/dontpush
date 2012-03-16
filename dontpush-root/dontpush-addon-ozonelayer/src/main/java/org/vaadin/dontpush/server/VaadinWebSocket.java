@@ -27,4 +27,6 @@ public interface VaadinWebSocket {
 
     void paintChanges(boolean repaintAll, boolean analyzeLayouts) throws IOException;
 
+    void destroy();
+
 }

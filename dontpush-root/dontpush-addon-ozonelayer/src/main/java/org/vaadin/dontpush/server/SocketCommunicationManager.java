@@ -17,6 +17,8 @@
 package org.vaadin.dontpush.server;
 
 import com.vaadin.Application;
+import com.vaadin.Application.WindowDetachEvent;
+import com.vaadin.Application.WindowDetachListener;
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.Paintable.RepaintRequestEvent;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
@@ -38,7 +40,8 @@ import org.slf4j.LoggerFactory;
  * @author Mark Thomas
  */
 @SuppressWarnings("serial")
-public class SocketCommunicationManager extends CommunicationManager {
+public class SocketCommunicationManager extends CommunicationManager implements
+        WindowDetachListener {
 
     protected final transient Logger logger = LoggerFactory
             .getLogger(getClass());
@@ -48,10 +51,12 @@ public class SocketCommunicationManager extends CommunicationManager {
 
     private final Set<Window> dirtyWindows = new HashSet<Window>();
     private Thread thread;
+    private Set<Window> detachedwindows = new HashSet<Window>();
 
     public SocketCommunicationManager(Application application) {
         super(application);
         id = UUID.randomUUID().toString();
+        application.addListener(this);
     }
 
     public String getId() {
@@ -164,5 +169,31 @@ public class SocketCommunicationManager extends CommunicationManager {
      */
     protected void setActiveWindow(Window window) {
         activeUidlRequestWindow = window;
+    }
+
+    public void destroy() {
+        cleanDetachedWindows();
+        for (Window w : windowToSocket.keySet()) {
+            VaadinWebSocket vaadinWebSocket = windowToSocket.get(w);
+            vaadinWebSocket.destroy();
+        }
+    }
+
+    void cleanDetachedWindows() {
+        if (detachedwindows.isEmpty()) {
+            return;
+        }
+        for (Window w : detachedwindows) {
+            VaadinWebSocket removed = windowToSocket.remove(w);
+            if (removed != null) {
+                removed.destroy();
+            }
+        }
+    }
+
+    public void windowDetached(WindowDetachEvent event) {
+        // mark for lazy clean up, destroying immediately might disturb e.g.
+        // redirects.
+        detachedwindows.add(event.getWindow());
     }
 }
