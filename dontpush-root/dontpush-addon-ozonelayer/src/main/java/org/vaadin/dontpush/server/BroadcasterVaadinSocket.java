@@ -33,7 +33,6 @@ import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.terminal.gwt.server.DontPushWebBrowser;
 import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {

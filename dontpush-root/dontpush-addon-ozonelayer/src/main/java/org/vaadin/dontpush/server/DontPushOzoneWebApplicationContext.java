@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.terminal.gwt.server.DontPushWebBrowser;
 import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
