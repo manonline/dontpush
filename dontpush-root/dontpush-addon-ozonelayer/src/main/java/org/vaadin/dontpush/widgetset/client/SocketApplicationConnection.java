@@ -46,6 +46,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
     private AtmosphereListener _cb = new AtmosphereListener() {
 
+        StringBuilder msg = new StringBuilder();
         boolean msgOpen;
 
         public void onConnected(int heartbeat, int connectionID) {
@@ -87,7 +88,6 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
 
         public void onMessage(List<? extends Serializable> messages) {
-            StringBuilder msg = new StringBuilder();
             for (Serializable serializable : messages) {
                 String message = serializable.toString();
                 VConsole.log("message");
