@@ -26,6 +26,12 @@ public class ConnectionGuard extends VOverlay {
         public void run() {
             show();
         }
+
+        @Override
+        public void cancel() {
+            super.cancel();
+            showingOrAboutToShow = false;
+        };
     };
 
     private static final int DEFAULT_TIMEOUT = 5000;
@@ -39,6 +45,7 @@ public class ConnectionGuard extends VOverlay {
     private Button restart;
     private Button ignore;
     private int timeout = -1;
+    private boolean showingOrAboutToShow;
 
     public ConnectionGuard() {
 
@@ -124,7 +131,10 @@ public class ConnectionGuard extends VOverlay {
     }
 
     public void disconnected() {
-        t.schedule(getConnectionGuardTimeout());
+        if (!showingOrAboutToShow) {
+            t.schedule(getConnectionGuardTimeout());
+            showingOrAboutToShow = true;
+        }
     }
 
     public void connected() {
@@ -155,6 +165,7 @@ public class ConnectionGuard extends VOverlay {
     @Override
     public void hide() {
         super.hide();
+        showingOrAboutToShow = false;
     }
 
 }
