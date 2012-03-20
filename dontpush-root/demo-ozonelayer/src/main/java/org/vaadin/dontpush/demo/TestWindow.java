@@ -129,8 +129,7 @@ public class TestWindow extends Window {
 			TestWindow w = windows[i];
 			// System.err.println("Sending message " + msg + " to " +
 			// w.getName());
-			synchronized (w) {
-				w.messages.requestRepaintRequests();
+			synchronized (w.getApplication()) {
 				w.addMessage(msg);
 			}
 		}
