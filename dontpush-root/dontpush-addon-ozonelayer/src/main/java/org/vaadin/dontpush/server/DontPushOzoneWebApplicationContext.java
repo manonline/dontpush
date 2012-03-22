@@ -18,9 +18,11 @@ package org.vaadin.dontpush.server;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.ui.Window;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
