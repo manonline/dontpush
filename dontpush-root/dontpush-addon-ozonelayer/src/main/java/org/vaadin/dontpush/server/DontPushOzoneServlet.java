@@ -85,20 +85,29 @@ public class DontPushOzoneServlet extends ApplicationServlet {
     protected boolean handleURI(CommunicationManager applicationManager,
             Window window, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
+        boolean handled;
         try {
             activeManager.set((SocketCommunicationManager)applicationManager);
-            return super.handleURI(applicationManager, window, request, response);
-        } finally {
+            handled = super.handleURI(applicationManager, window, request, response);
+        } catch (IOException ioe) {
             activeManager.remove();
+            throw ioe;
         }
+        if (handled) // writeAjaxPage not called if super.handleURI(...) returns true
+            activeManager.remove();
+        return handled;
     }
 
     @Override
     protected void writeAjaxPage(HttpServletRequest request,
             HttpServletResponse response, Window window, Application application)
             throws IOException, ServletException {
-        response.addCookie(new Cookie("OZONE_CM_ID", activeManager.get().getId()));
-        super.writeAjaxPage(request, response, window, application);
+        try {
+            response.addCookie(new Cookie("OZONE_CM_ID", activeManager.get().getId()));
+            super.writeAjaxPage(request, response, window, application);
+        } finally {
+            activeManager.remove();
+        }
     }
 
     @Override
