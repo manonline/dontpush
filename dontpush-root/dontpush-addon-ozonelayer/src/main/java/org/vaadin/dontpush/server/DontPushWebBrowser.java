@@ -13,6 +13,7 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
  * DontPushWebBrowser.class. The super class is only required for polymorphic
  * compatibility.
  */
+@SuppressWarnings("serial")
 public class DontPushWebBrowser extends WebBrowser {
     private int screenHeight = 0;
     private int screenWidth = 0;

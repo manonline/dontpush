@@ -102,3 +102,19 @@ VERSION 0.4.0
   * Stability: Paint phase now skipped if now active listeners (e.g. during network blackout)
   * Enhancement: "Connection Guard" now reports to user in case of connection issues.
   * Now defaults to Atmosphere 0.8.6
+
+VERSION 0.4.1:
+* Stable handling of the communication indicator
+* atmosphere 0.8.6 workaround
+
+VERSION 0.4.2:
+ * ConnectionGuard timeout is now configurable and has a specific style name so it can be themed.  
+
+VERSION 0.4.3
+ * fixed  a memory/thread leak
+ * OSGI support: custom webbrowser impl. now in same package
+ 
+VERSION 0.4.4
+2012-03-22
+ * fixed rare issue with message splitting
+ * fixed potential memory leak
