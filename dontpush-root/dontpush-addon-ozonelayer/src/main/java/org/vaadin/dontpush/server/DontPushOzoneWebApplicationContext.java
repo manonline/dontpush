@@ -25,8 +25,7 @@ import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.WeakHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,7 +66,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
 
     private final transient Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<? extends SocketCommunicationManager> communicationManagerClass;
-    private Collection<SocketCommunicationManager> mgrs = new LinkedList<SocketCommunicationManager>();
+    private WeakHashMap<SocketCommunicationManager, Void> mgrs = new WeakHashMap<SocketCommunicationManager, Void>();
 
     public DontPushOzoneWebApplicationContext(HttpSession session,
             Class<? extends SocketCommunicationManager> communicationManagerClass) {
@@ -99,7 +98,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
             this.session.setAttribute(
                     SocketCommunicationManager.class.getName(), mgr);
             AtmosphereDontPushHandler.setCommunicationManager(mgr.getId(), mgr);
-            mgrs.add(mgr);
+            mgrs.put(mgr, null);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }
         return mgr;
@@ -108,9 +107,10 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     @Override
     public void valueUnbound(HttpSessionBindingEvent event) {
         super.valueUnbound(event);
-        for (SocketCommunicationManager mgr : mgrs) {
+        for (SocketCommunicationManager mgr : mgrs.keySet()) {
             AtmosphereDontPushHandler.forgetCommunicationManager(mgr.getId());
         }
+        mgrs.clear();
     }
 
     public void trxStart(Application application, Object request) {
@@ -137,8 +137,9 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     @Override
     protected void removeApplication(Application application) {
         SocketCommunicationManager mgr = (SocketCommunicationManager) applicationToAjaxAppMgrMap.get(application);
-        if(mgr != null) {
+        if (mgr != null) {
             mgr.destroy();
+            mgrs.remove(mgr);
         }
         super.removeApplication(application);
     }
