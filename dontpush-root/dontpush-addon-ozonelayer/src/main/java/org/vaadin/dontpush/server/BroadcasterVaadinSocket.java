@@ -16,12 +16,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +26,12 @@ import java.net.URLDecoder;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -71,7 +71,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         this.cm = cm;
         this.window = window2;
     }
-
+    
     /**
      * @return the top level window for which this socket is tied to
      */
@@ -188,9 +188,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     }
 
     public void destroy() {
-        this.resource.destroy();
-        this.window = null;
-        this.cm = null;
+        resource.destroy();
     }
 
 }

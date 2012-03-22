@@ -103,7 +103,7 @@ public class SocketCommunicationManager extends CommunicationManager implements
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 *
+                 * 
                  * TODO redesign the whole server side paint phase triggering.
                  * Probably the best if just a one thread that fires paints for
                  * app instances. NOTE that atmosphere may actually do some cool
@@ -176,11 +176,6 @@ public class SocketCommunicationManager extends CommunicationManager implements
         for (Window w : windowToSocket.keySet()) {
             VaadinWebSocket vaadinWebSocket = windowToSocket.get(w);
             vaadinWebSocket.destroy();
-        }
-        this.windowToSocket.clear();
-        this.activeUidlRequestWindow = null;
-        synchronized (this.dirtyWindows) {
-            this.dirtyWindows.clear();
         }
     }
 
