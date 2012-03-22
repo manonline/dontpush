@@ -36,11 +36,12 @@ import org.atmosphere.gwt.client.AtmosphereListener;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- *
+ * 
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
 
+    public static final String MSG_TERMINATION_STRING = "OZONE\"END";
     private AtmosphereClient ws;
     private boolean ownRequestPending;
 
@@ -90,19 +91,23 @@ public class SocketApplicationConnection extends ApplicationConnection {
         public void onMessage(List<? extends Serializable> messages) {
             for (Serializable serializable : messages) {
                 String message = serializable.toString();
-                VConsole.log("message");
+                VConsole.log("message|" + message + "|");
 
                 final Date start = new Date();
                 if (!msgOpen) {
                     msg.append("{");
                     msgOpen = true;
                 }
-                boolean terminated = message.endsWith("OZONEEND");
-                if (terminated) {
-                    message = message.substring(0, message.length()
-                            - "OZONEEND".length());
-                }
                 msg.append(message);
+                boolean terminated = false;
+                if (message.endsWith("D")) {
+                    String string = msg.toString();
+                    if (string.endsWith(MSG_TERMINATION_STRING)) {
+                        message = string.substring(0, msg.length()
+                                - MSG_TERMINATION_STRING.length());
+                        terminated = true;
+                    }
+                }
                 if (terminated) {
                     if (!ownRequestPending) {
                         startRequest();
@@ -112,8 +117,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
                     // whether this was really anwer to out request or message
                     // pushed by server
                     ownRequestPending = false;
-                    msg.append("}");
-                    message = msg.toString();
+                    message += "}";
                     msg = new StringBuilder();
                     msgOpen = false;
                     try {
@@ -204,7 +208,8 @@ public class SocketApplicationConnection extends ApplicationConnection {
             visitServerOnConnect = false;
             extraParams = "repaintAll=1";
         }
-        VConsole.log("->SERVER: " + requestData + "; p: " + extraParams + "; forceSync: " + forceSync);
+        VConsole.log("->SERVER: " + requestData + "; p: " + extraParams
+                + "; forceSync: " + forceSync);
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
         requestData = URL.encode(requestData);

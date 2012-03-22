@@ -26,6 +26,7 @@ import java.net.URLDecoder;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.dontpush.widgetset.client.SocketApplicationConnection;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
@@ -96,7 +97,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                 logoutUrl = application.getURL().toString();
             }
             final String msg = "\"redirect\": {\"url\": \"" + logoutUrl
-                    + "\"}OZONEEND";
+                    + "\"}" + SocketApplicationConnection.MSG_TERMINATION_STRING;
             this.resource.broadcast(msg);
             return;
         }
@@ -111,7 +112,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             this.logger.error(e.getMessage(), e);
         } finally {
             if (out != null) {
-                out.print("OZONEEND");
+                out.print(SocketApplicationConnection.MSG_TERMINATION_STRING);
                 out.flush();
                 out.close();
             }
