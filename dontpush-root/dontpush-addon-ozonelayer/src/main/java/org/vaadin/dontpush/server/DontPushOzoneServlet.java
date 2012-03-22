@@ -46,8 +46,8 @@ import javax.servlet.http.HttpSession;
 @SuppressWarnings("serial")
 public class DontPushOzoneServlet extends ApplicationServlet {
 
+    private static final ThreadLocal<SocketCommunicationManager> activeManager = new ThreadLocal<SocketCommunicationManager>();
     private Class<? extends SocketCommunicationManager> communicationManagerClass;
-    private SocketCommunicationManager activeManager;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -85,15 +85,19 @@ public class DontPushOzoneServlet extends ApplicationServlet {
     protected boolean handleURI(CommunicationManager applicationManager,
             Window window, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        activeManager = (SocketCommunicationManager) applicationManager;
-        return super.handleURI(applicationManager, window, request, response);
+        try {
+            activeManager.set((SocketCommunicationManager)applicationManager);
+            return super.handleURI(applicationManager, window, request, response);
+        } finally {
+            activeManager.remove();
+        }
     }
 
     @Override
     protected void writeAjaxPage(HttpServletRequest request,
             HttpServletResponse response, Window window, Application application)
             throws IOException, ServletException {
-        response.addCookie(new Cookie("OZONE_CM_ID", activeManager.getId()));
+        response.addCookie(new Cookie("OZONE_CM_ID", activeManager.get().getId()));
         super.writeAjaxPage(request, response, window, application);
     }
 
