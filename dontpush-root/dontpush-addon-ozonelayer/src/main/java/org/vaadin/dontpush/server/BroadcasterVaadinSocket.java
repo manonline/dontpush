@@ -16,6 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,16 +29,12 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.dontpush.widgetset.client.SocketApplicationConnection;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -40,8 +42,11 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                                                         // WEBSOCKETS !?
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger jsonLogger = LoggerFactory
+      .getLogger(BroadcasterVaadinSocket.class.getName() + ".JSON");
     protected Broadcaster resource;
     protected SocketCommunicationManager cm;
+    private boolean logJSON = Boolean.getBoolean("dontpush.socket.logJSON");
 
     protected Callback callBack = new Callback() {
 
@@ -72,12 +77,29 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         this.cm = cm;
         this.window = window2;
     }
-    
+
     /**
      * @return the top level window for which this socket is tied to
      */
     public Window getWindow() {
         return window;
+    }
+
+    /**
+     * Whether or not we want the JSON being sent to the client to be logged.
+     * If enabled, JSON is written to the SLF4J Logger named
+     * org.vaadin.dontpush.server.BroadcasterVaadinSocket.JSON, if it exists
+     * and only if the Logger has TRACE logging enabled.
+     *
+     * This value can be turned on by overriding this method to return true,
+     * by using the setter, or by adding a boolean system property named
+     * "dontpush.socket.logJSON" (e.g. -Ddontpush.socket.logJSON=true)
+     */
+    public boolean isJSONLoggingEnabled() {
+        return this.logJSON;
+    }
+    public void setJSONLoggingEnabled(boolean logJSON) {
+        this.logJSON = logJSON;
     }
 
     public void paintChanges(boolean repaintAll, boolean analyzeLayouts)
@@ -125,6 +147,20 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             System.arraycopy(byteArray, sent, buf, 0, bufsize);
             this.resource.broadcast(new String(buf));
             sent += bufsize;
+        }
+        if (this.isJSONLoggingEnabled() && this.jsonLogger.isTraceEnabled()) {
+
+            HttpServletRequest req =
+              ((HttpServletRequest)resource.getAtmosphereResources()
+                .iterator().next().getRequest());
+            String ip = "unknown client";
+            if (req != null) {
+                ip = req.getHeader("X-Forwarded-For");
+                if (ip == null)
+                    ip = req.getRemoteAddr();
+            }
+            this.jsonLogger.trace("Sent " + sent + " bytes of JSON to " + ip
+              + ":\n" + new String(byteArray));
         }
     }
 
