@@ -16,6 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -29,14 +35,6 @@ import javax.servlet.http.HttpSessionBindingEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.ui.Window;
 
 /**
  * Web application context for Vaadin applications.
@@ -68,11 +66,11 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     }
 
     private final transient Logger logger = LoggerFactory.getLogger(getClass());
-    private final Class<SocketCommunicationManager> communicationManagerClass;
+    private final Class<? extends SocketCommunicationManager> communicationManagerClass;
     private Collection<SocketCommunicationManager> mgrs = new LinkedList<SocketCommunicationManager>();
 
     public DontPushOzoneWebApplicationContext(HttpSession session,
-            Class<SocketCommunicationManager> communicationManagerClass) {
+            Class<? extends SocketCommunicationManager> communicationManagerClass) {
         super();
         this.session = session;
         this.communicationManagerClass = communicationManagerClass;
@@ -135,7 +133,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     public DontPushWebBrowser getBrowser() {
         return (DontPushWebBrowser) super.getBrowser();
     }
-    
+
     @Override
     protected void removeApplication(Application application) {
         SocketCommunicationManager mgr = (SocketCommunicationManager) applicationToAjaxAppMgrMap.get(application);

@@ -39,14 +39,14 @@ import javax.servlet.http.HttpSession;
  * TODO check if here is something generic for abstract super class among
  * various app servers. Or better yet, detect if we could use same servlet for
  * all servers and create app server specific parts dynamically.
- * 
+ *
  * @author mattitahvonen
  * @author Mark Thomas
  */
 @SuppressWarnings("serial")
 public class DontPushOzoneServlet extends ApplicationServlet {
 
-    private Class<SocketCommunicationManager> communicationManagerClass;
+    private Class<? extends SocketCommunicationManager> communicationManagerClass;
     private SocketCommunicationManager activeManager;
 
     @Override
