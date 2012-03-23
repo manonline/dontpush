@@ -118,3 +118,8 @@ VERSION 0.4.4
 2012-03-22
  * fixed rare issue with message splitting
  * fixed potential memory leak
+
+VERSION 0.4.5
+2012-03-23
+ * fixed issue where a window could not successfully be re-attached once detached
+
