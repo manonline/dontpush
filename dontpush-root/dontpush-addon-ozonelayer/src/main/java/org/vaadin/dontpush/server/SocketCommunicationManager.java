@@ -51,7 +51,7 @@ public class SocketCommunicationManager extends CommunicationManager implements
 
     private final Set<Window> dirtyWindows = new HashSet<Window>();
     private Thread thread;
-    private Set<Window> detachedwindows = new HashSet<Window>();
+    private final Set<Window> detachedwindows = new HashSet<Window>();
 
     public SocketCommunicationManager(Application application) {
         super(application);
@@ -103,7 +103,7 @@ public class SocketCommunicationManager extends CommunicationManager implements
                 /**
                  * Add a very small latency for the tread that triggers to paint
                  * phase.
-                 * 
+                 *
                  * TODO redesign the whole server side paint phase triggering.
                  * Probably the best if just a one thread that fires paints for
                  * app instances. NOTE that atmosphere may actually do some cool
@@ -180,10 +180,17 @@ public class SocketCommunicationManager extends CommunicationManager implements
     }
 
     void cleanDetachedWindows() {
-        if (detachedwindows.isEmpty()) {
-            return;
+        synchronized (this.detachedwindows) {
+            if (detachedwindows.isEmpty()) {
+                return;
+            }
         }
-        for (Window w : detachedwindows) {
+        Set<Window> clone;
+        synchronized (this.detachedwindows) {
+            clone = new HashSet<Window>(this.detachedwindows);
+            this.detachedwindows.clear();
+        }
+        for (Window w : clone) {
             VaadinWebSocket removed = windowToSocket.remove(w);
             if (removed != null) {
                 removed.destroy();
