@@ -143,6 +143,9 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         int sent = 0;
         while (sent < byteArray.length) {
             int bufsize = Math.min(byteArray.length - sent, MAX_MSG_LENGHT);
+            if(sent + bufsize != byteArray.length) {
+                bufsize = getValidSplitPoint(sent, bufsize, byteArray);
+            }
             byte[] buf = new byte[bufsize];
             System.arraycopy(byteArray, sent, buf, 0, bufsize);
             this.resource.broadcast(new String(buf));
@@ -161,6 +164,24 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             }
             this.jsonLogger.trace("Sent " + sent + " bytes of JSON to " + ip
               + ":\n" + new String(byteArray));
+        }
+    }
+
+    private int getValidSplitPoint(int sent, int bufsize, byte[] byteArray) {
+        while(true) {
+            int lastByte = byteArray[sent + bufsize -1] & 0xff;
+            switch (lastByte >>> 6) {
+            case 0:
+                // normal ascii character, valid break point
+                return bufsize;
+            case 3:
+                // first bit of utf8 extended character, split just before
+                return bufsize - 1;
+            default:
+                // extra bits of utf8 character, go backwards until a valid break point is found
+                bufsize--;
+                break;
+            }
         }
     }
 
