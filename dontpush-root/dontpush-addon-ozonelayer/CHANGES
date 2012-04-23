@@ -123,3 +123,12 @@ VERSION 0.4.5
 2012-03-23
  * fixed issue where a window could not successfully be re-attached once detached
 
+VERSION 0.4.6
+2012-04-2
+ * msg splitting issue when split hit utf-8 extended characters
+
+ VERSION 0.4.7
+2012-04-23
+ * Fixed request derived WebBrowser details (regression)
+ 
+ 
