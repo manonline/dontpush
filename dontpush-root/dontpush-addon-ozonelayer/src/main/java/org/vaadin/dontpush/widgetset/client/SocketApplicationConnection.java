@@ -212,7 +212,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
                 + "; forceSync: " + forceSync);
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
-        requestData = URL.encode(requestData);
+        requestData = URL.encodeQueryString(requestData);
         if (forceSync) {
             /*
              * TODO Check if this really works. Else we could send the last
