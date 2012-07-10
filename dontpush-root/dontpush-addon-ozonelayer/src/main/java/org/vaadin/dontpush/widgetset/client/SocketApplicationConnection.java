@@ -36,7 +36,7 @@ import org.atmosphere.gwt.client.AtmosphereListener;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- * 
+ *
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -90,7 +90,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         public void onMessage(List<? extends Serializable> messages) {
             for (Serializable serializable : messages) {
-                String message = serializable.toString();
+                String message = serializable.toString().replace("@NL@", "\\n");
                 VConsole.log("message|" + message + "|");
 
                 final Date start = new Date();

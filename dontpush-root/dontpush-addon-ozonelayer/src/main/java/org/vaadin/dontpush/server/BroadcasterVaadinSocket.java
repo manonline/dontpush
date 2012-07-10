@@ -148,7 +148,8 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             }
             byte[] buf = new byte[bufsize];
             System.arraycopy(byteArray, sent, buf, 0, bufsize);
-            this.resource.broadcast(new String(buf));
+            String str = new String(buf, "UTF-8").replace("\\n", "@NL@");
+            this.resource.broadcast(str);
             sent += bufsize;
         }
         if (this.isJSONLoggingEnabled() && this.jsonLogger.isTraceEnabled()) {
