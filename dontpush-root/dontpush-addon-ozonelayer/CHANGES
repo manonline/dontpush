@@ -131,4 +131,9 @@ VERSION 0.4.6
 2012-04-23
  * Fixed request derived WebBrowser details (regression)
  
- 
+VERSION 0.4.9
+ * Fix newline handling
+
+VERSION 0.5.0
+ * Upgraded to Atmosphere 1.0.0.beta4.  Add-on will now only support Atmosphere 1.0.x.
+

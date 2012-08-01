@@ -18,10 +18,7 @@ package org.vaadin.dontpush.server;
 
 import com.vaadin.ui.Window;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,7 +39,6 @@ import org.atmosphere.cpr.DefaultBroadcaster;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
-import org.atmosphere.util.Version;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
@@ -71,78 +67,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         }
     }
 
-    @Override
-    protected void doServerMessage(BufferedReader data, int connectionID) {
-        GwtAtmosphereResource resource = lookupResource(connectionID);
-        if (resource == null) {
-            return;
-        }
-        try {
-            BroadcasterVaadinSocket socket = this.resourceSocketMap.get(resource);
-            CURRENT_SOCKET.set(socket);
-            if ("0.8.6".equals(Version.getDotedVersion()))
-                this.doServerMessage(resource, data, connectionID);
-            else
-                super.doServerMessage(data, connectionID);
-        } finally {
-            CURRENT_SOCKET.remove();
-        }
-    }
-
-    private void doServerMessage(GwtAtmosphereResource resource, BufferedReader data, int connectionID) {
-        List<Serializable> postMessages = new ArrayList<Serializable>();
-        try {
-            while (true) {
-                String event = data.readLine();
-                if (event == null) {
-                    break;
-                }
-                String messageData = data.readLine();
-                if (messageData == null) {
-                    break;
-                }
-                data.readLine();
-                if (logger.isTraceEnabled()) {
-                    logger.trace("[" + connectionID + "] Server message received: " + event + ";" + messageData.charAt(0));
-                }
-                if (event.equals("o")) {
-                    if (messageData.charAt(0) == 'p') {
-                        Serializable message = deserialize(messageData.substring(1));
-                        if (message != null) {
-                            postMessages.add(message);
-                        }
-                    } else if (messageData.charAt(0) == 'b') {
-                        Serializable message = deserialize(messageData.substring(1));
-                        broadcast(message, resource);
-                    }
-
-                } else if (event.equals("s")) {
-
-                    if (messageData.charAt(0) == 'p') {
-                        String message = messageData.substring(1);
-                        postMessages.add(message);
-                    } else if (messageData.charAt(0) == 'b') {
-                        Serializable message = messageData.substring(1);
-                        broadcast(message, resource);
-                    }
-
-                } else if (event.equals("c")) {
-
-                    if (messageData.equals("d")) {
-                        disconnect(resource);
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            logger.error("[" + connectionID + "] Failed to read", ex);
-        }
-
-        if (postMessages.size() > 0) {
-            post(postMessages, resource);
-        }
-    }
-
-    // TODO: should
     private void cleanup(GwtAtmosphereResource resource) {
         this.resourceSocketMap.remove(resource);
         if (this.logger.isTraceEnabled()) {
@@ -153,13 +77,23 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     }
 
     @Override
-    public void broadcast(Serializable message, GwtAtmosphereResource resource) {
+    public void broadcast(Object message, GwtAtmosphereResource resource) {
         BroadcasterVaadinSocket socket = CURRENT_SOCKET.get();
         if (socket != null) {
             String data = message.toString();
             socket.handlePayload(data);
         } else {
             this.logger.info("Could not handle msg, cm not found. (non-functional) close request??");
+        }
+    }
+
+    @Override
+    public void broadcast(List<?> messages, GwtAtmosphereResource resource) {
+        if (messages == null) {
+            return;
+        }
+        for (Object o : messages) {
+            this.broadcast(o, resource);
         }
     }
 
@@ -209,12 +143,12 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(new AtmosphereResourceEventListenerAdapter() {
 
-            public void onSuspend(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+            public void onSuspend(AtmosphereResourceEvent event) {
                 logger.debug("connection suspended");
                 logger.debug("Have " + resourceSocketMap.size() + " sockets after suspend");
             }
 
-            public void onResume(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+            public void onResume(AtmosphereResourceEvent event) {
                 logger.debug("connection resumed");
                 // cannot call cleanup here as this event is fired before we process data for window close events; thus, if we remove it
                 // the UIDL for the close event will never get processed ;0(
@@ -223,12 +157,12 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                 logger.debug("Have " + resourceSocketMap.size() + " sockets after resume");
             }
 
-            public void onDisconnect(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+            public void onDisconnect(AtmosphereResourceEvent event) {
                 logger.debug("connection disconnected; cleaning up");
                 cleanup(resource);
             }
 
-            public void onThrowable(AtmosphereResourceEvent<HttpServletRequest, HttpServletResponse> event) {
+            public void onThrowable(AtmosphereResourceEvent event) {
                 logger.debug("connection thre exception; cleaning up", event.throwable());
                 cleanup(resource);
             }
@@ -259,7 +193,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     }
 
     @Override
-    public void doPost(List<Serializable> messages, GwtAtmosphereResource r) {
+    public void doPost(HttpServletRequest postRequest, HttpServletResponse postResponse,
+      List<?> messages, GwtAtmosphereResource cometResource) {
         this.logger.error("TODO Never happens in our case?");
     }
 
@@ -295,30 +230,5 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace("Have " + this.resourceSocketMap.size() + " resources after reaping the dead.");
         }
-    }
-
-    /**
-     * This can be used to lookup a resource for instance if you are implementing a remote service call
-     * You will need to pass the connectionID, which you can pass as an url parameter {getConnectionID()} or
-     * directly in your remote call
-     *
-     * @param connectionId
-     * @return
-     */
-    @Override
-    protected GwtAtmosphereResource lookupResource(int connectionId) {
-        GwtAtmosphereResource r = null;
-        try {
-            r = super.lookupResource(connectionId);
-        } catch (NullPointerException npe) {
-            this.logger.warn("doServerMessage called before doCometImpl. Application server must have been restarted while "
-              + "clients were active");
-        }
-        if (r != null) {
-            return r;
-        } else {
-            this.logger.info("Failed to find resource for [" + connectionId + "]");
-        }
-        return null;
     }
 }

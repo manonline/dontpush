@@ -88,9 +88,9 @@ public class SocketApplicationConnection extends ApplicationConnection {
             VConsole.log("DEBUG: onRefresh");
         }
 
-        public void onMessage(List<? extends Serializable> messages) {
-            for (Serializable serializable : messages) {
-                String message = serializable.toString().replace("@NL@", "\\n");
+        public void onMessage(List<?> messages) {
+            for (Object o : messages) {
+                String message = o.toString().replace("@NL@", "\\n");
                 VConsole.log("message|" + message + "|");
 
                 final Date start = new Date();
