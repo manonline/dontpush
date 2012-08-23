@@ -16,6 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
+import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -25,16 +31,9 @@ import java.util.LinkedList;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionBindingEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractApplicationServlet;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
-import com.vaadin.terminal.gwt.server.HttpServletRequestListener;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
 
 /**
  * Web application context for Vaadin applications.
@@ -98,19 +97,10 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
             }
             this.session.setAttribute(
                     SocketCommunicationManager.class.getName(), mgr);
-            AtmosphereDontPushHandler.setCommunicationManager(mgr.getId(), mgr);
             mgrs.add(mgr);
             this.applicationToAjaxAppMgrMap.put(application, mgr);
         }
         return mgr;
-    }
-
-    @Override
-    public void valueUnbound(HttpSessionBindingEvent event) {
-        super.valueUnbound(event);
-        for (SocketCommunicationManager mgr : mgrs) {
-            AtmosphereDontPushHandler.forgetCommunicationManager(mgr.getId());
-        }
     }
 
     public void trxStart(Application application, Object request) {
@@ -137,7 +127,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
     @Override
     protected void removeApplication(Application application) {
         SocketCommunicationManager mgr = (SocketCommunicationManager) applicationToAjaxAppMgrMap.get(application);
-        if(mgr != null) {
+        if (mgr != null) {
             mgr.destroy();
         }
         super.removeApplication(application);

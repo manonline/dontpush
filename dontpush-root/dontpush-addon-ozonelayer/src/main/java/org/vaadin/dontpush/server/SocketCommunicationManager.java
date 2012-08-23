@@ -45,7 +45,7 @@ public class SocketCommunicationManager extends CommunicationManager implements
 
     protected final transient Logger logger = LoggerFactory
             .getLogger(getClass());
-    private final transient Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
+    private final Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
     private String id;
     private Window activeUidlRequestWindow;
 

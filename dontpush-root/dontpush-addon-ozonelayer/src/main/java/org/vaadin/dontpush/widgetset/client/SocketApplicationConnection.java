@@ -17,8 +17,9 @@
 package org.vaadin.dontpush.widgetset.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.http.client.URL;
-import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
@@ -27,7 +28,6 @@ import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 import com.vaadin.terminal.gwt.client.WidgetSet;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -86,6 +86,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         public void onRefresh() {
             VConsole.log("DEBUG: onRefresh");
+        }
+
+        public void onAfterRefresh() {
+            VConsole.log("DEBUG: onAfterRefresh");
+            getConnectionGuard().connected();
         }
 
         public void onMessage(List<?> messages) {
@@ -173,19 +178,21 @@ public class SocketApplicationConnection extends ApplicationConnection {
                 url = protoAndHost + url;
             }
 
-            String cmid = Cookies.getCookie("OZONE_CM_ID");
-            url += cmid + "/" + getConfiguration().getInitialWindowName();
+            url += getConfiguration().getInitialWindowName();
             VConsole.log(url);
 
-            boolean tryWithWebsockets = BrowserInfo.get().isWebkit();
             VConsole.log("Creating atmosphere client...");
-            /*
-             * Ask atmosphere guys to fix this. Automatic degrading from
-             * websockets don't work in others but webkit.
-             */
-            this.ws = new AtmosphereClient(url, null, _cb, tryWithWebsockets);
+            this.ws = new AtmosphereClient(url, null, _cb, true);
             VConsole.log("...starting...");
-            this.ws.start();
+
+            if (BrowserInfo.get().isWebkit()) {
+                Scheduler.get().scheduleDeferred(new Command() {
+                    public void execute() {
+                        ws.start();
+                    }
+                });
+            } else
+                this.ws.start();
         }
         return this.ws;
     }

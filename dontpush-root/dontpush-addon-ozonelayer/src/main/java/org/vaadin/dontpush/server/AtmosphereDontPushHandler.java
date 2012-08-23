@@ -19,8 +19,6 @@ package org.vaadin.dontpush.server;
 import com.vaadin.ui.Window;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,19 +28,19 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.atmosphere.cpr.DefaultBroadcaster;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
+import org.atmosphere.util.SimpleBroadcaster;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
-    private static final ThreadLocal<BroadcasterVaadinSocket> CURRENT_SOCKET = new ThreadLocal<BroadcasterVaadinSocket>();
     private Class<BroadcasterVaadinSocket> socketClass;
     private final Map<GwtAtmosphereResource, BroadcasterVaadinSocket> resourceSocketMap =
       new WeakHashMap<GwtAtmosphereResource, BroadcasterVaadinSocket>();
@@ -78,7 +76,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
     @Override
     public void broadcast(Object message, GwtAtmosphereResource resource) {
-        BroadcasterVaadinSocket socket = CURRENT_SOCKET.get();
+        BroadcasterVaadinSocket socket = resourceSocketMap.get(resource);
         if (socket != null) {
             String data = message.toString();
             socket.handlePayload(data);
@@ -107,17 +105,18 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     private void establishConnection(final GwtAtmosphereResource resource) {
         final String path = resource.getRequest().getPathInfo();
         String[] split = path.split("/");
-        String cmId = split[1];
-        final SocketCommunicationManager cm = getCommunicationManager(cmId);
+
+        HttpSession session = resource.getSession();
+        final SocketCommunicationManager cm =
+          (SocketCommunicationManager)session.getAttribute(SocketCommunicationManager.class.getName());
         if (cm == null) {
-            this.logger
-                    .debug("Couldn't establish connection, no CM found for this session "
-                            + cmId);
+            this.logger.debug("Couldn't establish connection, no CM found for this session");
             // TODO can happen e.g. server restart, should cause reload, now
             // dies silently?
             return;
         }
-        String windowName = split[2];
+        String cmId = cm.getId();
+        String windowName = split[1];
         Window window;
         if ("null".equals(windowName)) {
             window = cm.getApplication().getMainWindow();
@@ -135,10 +134,10 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
         final String key = "dontpush-" + cmId + "-" + windowName;
         final BroadcasterFactory factory = DefaultBroadcasterFactory.getDefault();
-        Broadcaster bc = factory.lookup(DefaultBroadcaster.class, key, true);
+        Broadcaster bc = factory.lookup(SimpleBroadcaster.class, key, true);
         if (bc.isDestroyed()) { // handle case of window detach then re-attach
             factory.remove(bc, key);
-            bc = factory.lookup(DefaultBroadcaster.class, key, true);
+            bc = factory.lookup(SimpleBroadcaster.class, key, true);
         }
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(new AtmosphereResourceEventListenerAdapter() {
@@ -196,26 +195,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     public void doPost(HttpServletRequest postRequest, HttpServletResponse postResponse,
       List<?> messages, GwtAtmosphereResource cometResource) {
         this.logger.error("TODO Never happens in our case?");
-    }
-
-    /**
-     * This map is used instead of session as the session is not available in
-     * all web socket implementations.
-     */
-    private static Map<String, SocketCommunicationManager> sessToMgr = Collections
-            .synchronizedMap(new HashMap<String, SocketCommunicationManager>());
-
-    public static void setCommunicationManager(String cmId,
-            SocketCommunicationManager mgr) {
-        sessToMgr.put(cmId, mgr);
-    }
-
-    public static SocketCommunicationManager getCommunicationManager(String cmId) {
-        return sessToMgr.get(cmId);
-    }
-
-    public static void forgetCommunicationManager(String id) {
-        sessToMgr.remove(id);
     }
 
     @Override

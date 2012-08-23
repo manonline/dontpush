@@ -16,20 +16,15 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.ApplicationServlet;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.ui.Window;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -46,7 +41,6 @@ import javax.servlet.http.HttpSession;
 @SuppressWarnings("serial")
 public class DontPushOzoneServlet extends ApplicationServlet {
 
-    private static final ThreadLocal<SocketCommunicationManager> activeManager = new ThreadLocal<SocketCommunicationManager>();
     private Class<? extends SocketCommunicationManager> communicationManagerClass;
 
     @Override
@@ -75,39 +69,6 @@ public class DontPushOzoneServlet extends ApplicationServlet {
             session.setAttribute(WebApplicationContext.class.getName(), cx);
         }
         return cx;
-    }
-
-    /*
-     * This is always called before writing the host page where we need the mgr
-     * id.
-     */
-    @Override
-    protected boolean handleURI(CommunicationManager applicationManager,
-            Window window, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-        boolean handled;
-        try {
-            activeManager.set((SocketCommunicationManager)applicationManager);
-            handled = super.handleURI(applicationManager, window, request, response);
-        } catch (IOException ioe) {
-            activeManager.remove();
-            throw ioe;
-        }
-        if (handled) // writeAjaxPage not called if super.handleURI(...) returns true
-            activeManager.remove();
-        return handled;
-    }
-
-    @Override
-    protected void writeAjaxPage(HttpServletRequest request,
-            HttpServletResponse response, Window window, Application application)
-            throws IOException, ServletException {
-        try {
-            response.addCookie(new Cookie("OZONE_CM_ID", activeManager.get().getId()));
-            super.writeAjaxPage(request, response, window, application);
-        } finally {
-            activeManager.remove();
-        }
     }
 
     @Override
