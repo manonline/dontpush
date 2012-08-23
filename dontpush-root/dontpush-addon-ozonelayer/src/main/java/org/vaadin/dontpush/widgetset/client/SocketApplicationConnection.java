@@ -17,13 +17,10 @@
 package org.vaadin.dontpush.widgetset.client;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.http.client.URL;
-import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
-import com.vaadin.terminal.gwt.client.BrowserInfo;
 import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 import com.vaadin.terminal.gwt.client.WidgetSet;
@@ -185,14 +182,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             this.ws = new AtmosphereClient(url, null, _cb, true);
             VConsole.log("...starting...");
 
-            if (BrowserInfo.get().isWebkit()) {
-                Scheduler.get().scheduleDeferred(new Command() {
-                    public void execute() {
-                        ws.start();
-                    }
-                });
-            } else
-                this.ws.start();
+            this.ws.start();
         }
         return this.ws;
     }
