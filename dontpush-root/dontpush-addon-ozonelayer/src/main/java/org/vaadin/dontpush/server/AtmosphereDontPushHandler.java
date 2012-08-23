@@ -37,7 +37,6 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
-import org.atmosphere.util.SimpleBroadcaster;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
@@ -134,10 +133,10 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
         final String key = "dontpush-" + cmId + "-" + windowName;
         final BroadcasterFactory factory = DefaultBroadcasterFactory.getDefault();
-        Broadcaster bc = factory.lookup(SimpleBroadcaster.class, key, true);
+        Broadcaster bc = factory.lookup(key, true);
         if (bc.isDestroyed()) { // handle case of window detach then re-attach
             factory.remove(bc, key);
-            bc = factory.lookup(SimpleBroadcaster.class, key, true);
+            bc = factory.lookup(key, true);
         }
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(new AtmosphereResourceEventListenerAdapter() {
