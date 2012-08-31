@@ -32,11 +32,11 @@
 			<artifactId>dontpush-addon-ozonelayer</artifactId>
 			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.6.1</version>
-        </dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.6.1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-chrome-driver</artifactId>
@@ -58,24 +58,34 @@
 		<dependency>
 			<groupId>com.google.gwt</groupId>
 			<artifactId>gwt-servlet</artifactId>
-			<version>2.3.0</version>
+			<version>2.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.gwt</groupId>
 			<artifactId>gwt-user</artifactId>
-			<version>2.3.0</version>
+			<version>2.4.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.gwt</groupId>
 			<artifactId>gwt-dev</artifactId>
-			<version>2.3.0</version>
+			<version>2.4.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -136,8 +146,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<source>1.6</source>
+					<target>1.6</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
@@ -184,20 +194,20 @@
 			</plugin>
 
 			<!-- Compiles your custom GWT components with the GWT compiler -->
-			<!-- A hosted mode browser for client-side widget debugging can be run
-				with the goal gwt:run after uncommenting the correct line below. A remote
-				debugger can then be connected to port 8998. Note that e.g. a Jetty server
+			<!-- A hosted mode browser for client-side widget debugging can be run 
+				with the goal gwt:run after uncommenting the correct line below. A remote 
+				debugger can then be connected to port 8998. Note that e.g. a Jetty server 
 				should be running with the server side parts - use the goal jetty:run . -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
-				<version>2.3.0-1</version>
+				<version>2.4.0</version>
 				<configuration>
 					<!-- if you don't specify any modules, the plugin will find them -->
 					<!-- <modules> <module>${package}.gwt.MyWidgetSet</module> </modules> -->
 					<webappDirectory>${project.build.directory}/${project.build.finalName}/VAADIN/widgetsets</webappDirectory>
 					<!-- On Mac running Snow Leopard, add "-d32" -->
-					<!-- This causes error messages (but build works) in phase "package":
+					<!-- This causes error messages (but build works) in phase "package": 
 						two processes would use the same debug port -->
 					<!--extraJvmArgs>-Xmx512M -Xss1024k -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8998</extraJvmArgs -->
 					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
@@ -205,8 +215,9 @@
 					<hostedWebapp>${project.build.directory}/${project.build.finalName}</hostedWebapp>
 					<noServer>true</noServer>
 					<compileReport>false</compileReport>
-					<!-- <draftCompile>true</draftCompile> -->
-					 <style>PRETTY</style>
+					<draftCompile>true</draftCompile>
+<!-- 					<force>true</force> -->
+					<style>PRETTY</style>
 				</configuration>
 				<executions>
 					<execution>
@@ -216,30 +227,13 @@
 						</goals>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>com.google.gwt</groupId>
-						<artifactId>gwt-user</artifactId>
-						<version>2.3.0</version>
-					</dependency>
-					<dependency>
-						<groupId>com.google.gwt</groupId>
-						<artifactId>gwt-dev</artifactId>
-						<version>2.3.0</version>
-					</dependency>
-					<dependency>
-						<groupId>com.google.gwt</groupId>
-						<artifactId>gwt-servlet</artifactId>
-						<version>2.3.0</version>
-					</dependency>
-				</dependencies>
 			</plugin>
 
 		</plugins>
 
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
