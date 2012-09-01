@@ -19,6 +19,8 @@ package org.vaadin.dontpush.widgetset.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.impl.Serializer;
 import com.vaadin.terminal.gwt.client.ApplicationConfiguration;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.VConsole;
@@ -29,11 +31,13 @@ import java.util.Date;
 import java.util.List;
 
 import org.atmosphere.gwt.client.AtmosphereClient;
+import org.atmosphere.gwt.client.AtmosphereGWTSerializer;
 import org.atmosphere.gwt.client.AtmosphereListener;
+import org.atmosphere.gwt.shared.SerialMode;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- *
+ * 
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -64,7 +68,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
 
         public void onDisconnected() {
-            VConsole.log("WS Disconnected");
+            VConsole.error("WS Disconnected");
             // reconnect is automatic
             // TODO I guess this should be configurable for different use cases
             // TODO how to handle windows forgotten open ?
@@ -148,6 +152,35 @@ public class SocketApplicationConnection extends ApplicationConnection {
     private ConnectionGuard errorDisplay;
     private boolean visitServerOnConnect;
 
+    // This is needed just to make IE/Opera work
+    private AtmosphereGWTSerializer serializer = new AtmosphereGWTSerializer() {
+
+        @Override
+        public String serialize(Object message) throws SerializationException {
+            return message.toString();
+        }
+
+        @Override
+        protected Serializer getRPCSerializer() {
+            return null;
+        }
+
+        @Override
+        public SerialMode getPushMode() {
+            return SerialMode.PLAIN;
+        }
+
+        @Override
+        public SerialMode getMode() {
+            return SerialMode.PLAIN;
+        }
+
+        @Override
+        public Object deserialize(String message) throws SerializationException {
+            return message;
+        }
+    };
+
     @Override
     public void init(WidgetSet widgetSet, ApplicationConfiguration cnf) {
         super.init(widgetSet, cnf);
@@ -179,7 +212,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             VConsole.log(url);
 
             VConsole.log("Creating atmosphere client...");
-            this.ws = new AtmosphereClient(url, null, _cb, true);
+            this.ws = new AtmosphereClient(url, serializer, _cb, true);
             VConsole.log("...starting...");
 
             this.ws.start();
@@ -207,6 +240,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
         VConsole.log("->SERVER: " + requestData + "; p: " + extraParams
                 + "; forceSync: " + forceSync);
+
         // Due to atmosphere bug/feature/whatever we need to urlencode the
         // payload as well (linebreaks are not allowed in messages)
         requestData = URL.encodeQueryString(requestData);
