@@ -29,8 +29,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +46,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class SocketCommunicationManager extends CommunicationManager implements
         WindowDetachListener {
-
+    
     protected final transient Logger logger = LoggerFactory
             .getLogger(getClass());
     private final Map<Window, VaadinWebSocket> windowToSocket = new HashMap<Window, VaadinWebSocket>();
@@ -50,8 +54,9 @@ public class SocketCommunicationManager extends CommunicationManager implements
     private Window activeUidlRequestWindow;
 
     private final Set<Window> dirtyWindows = new HashSet<Window>();
-    private Thread thread;
+    private Runnable pendingPaint;
     private final Set<Window> detachedwindows = new HashSet<Window>();
+    private Executor executor;
 
     public SocketCommunicationManager(Application application) {
         super(application);
@@ -98,28 +103,11 @@ public class SocketCommunicationManager extends CommunicationManager implements
     }
 
     private void deferPaintPhase() {
-        if (thread == null) {
-            thread = new Thread() {
-                /**
-                 * Add a very small latency for the tread that triggers to paint
-                 * phase.
-                 *
-                 * TODO redesign the whole server side paint phase triggering.
-                 * Probably the best if just a one thread that fires paints for
-                 * app instances. NOTE that atmosphere may actually do some cool
-                 * things for us alreay. This may actually be obsolete in
-                 * atmosphere version.
-                 */
-                private long RESPONSE_LATENCY = 3;
-
+        if (pendingPaint == null) {
+            pendingPaint = new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        sleep(RESPONSE_LATENCY);
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
-                    thread = null;
+                    pendingPaint = null;
                     Set<Window> copy;
                     synchronized (dirtyWindows) {
                         copy = new HashSet<Window>(dirtyWindows);
@@ -130,8 +118,12 @@ public class SocketCommunicationManager extends CommunicationManager implements
                     }
                 }
             };
-            thread.start();
+            getExecutor().execute(pendingPaint);
         }
+    }
+
+    private Executor getExecutor() {
+        return executor;
     }
 
     protected void paintChanges(Window window) {
@@ -202,5 +194,9 @@ public class SocketCommunicationManager extends CommunicationManager implements
         // mark for lazy clean up, destroying immediately might disturb e.g.
         // redirects.
         detachedwindows.add(event.getWindow());
+    }
+
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
     }
 }

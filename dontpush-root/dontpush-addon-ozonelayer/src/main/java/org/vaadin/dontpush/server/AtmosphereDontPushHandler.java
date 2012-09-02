@@ -138,6 +138,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             // dies silently?
             return;
         }
+        cm.setExecutor(this);
         String cmId = cm.getId();
         String windowName = split[1];
         Window window;
