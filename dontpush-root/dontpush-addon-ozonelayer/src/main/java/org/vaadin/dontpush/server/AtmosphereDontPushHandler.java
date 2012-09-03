@@ -212,7 +212,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                 return this.socketClass.getConstructor(
                         Broadcaster.class,
                         SocketCommunicationManager.class, Window.class)
-                        .newInstance(cm, window);
+                        .newInstance(resource, cm, window);
             } catch (Exception e) {
                 this.logger.error("Error creating socket", e);
             }
