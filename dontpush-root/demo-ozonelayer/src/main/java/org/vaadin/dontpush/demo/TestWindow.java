@@ -59,9 +59,12 @@ public class TestWindow extends Window {
 						progressIndicator.setValue(new Float(f));
 					}
 					if (f > 1) {
-						Label c = new Label("Test thread done");
-						c.setDebugId(TestWindow.this.getName() + "-donelabel");
-						addComponent(c);
+						synchronized (getApplication()) {
+							Label c = new Label("Test thread done");
+							c.setDebugId(TestWindow.this.getName()
+									+ "-donelabel");
+							addComponent(c);
+						}
 						break;
 					}
 					// Don't push, the magic will just happen.
