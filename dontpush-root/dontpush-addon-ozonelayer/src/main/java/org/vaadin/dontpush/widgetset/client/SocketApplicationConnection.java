@@ -50,6 +50,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         StringBuilder msg = new StringBuilder();
         boolean msgOpen;
+        private int msgIndex;
 
         public void onConnected(int heartbeat, int connectionID) {
             VConsole.log("WS Connected");
@@ -129,6 +130,24 @@ public class SocketApplicationConnection extends ApplicationConnection {
                     try {
                         VConsole.log("Received socket message...");
                         ValueMap json = evaluateUIDL(message);
+
+                        int msgIndex = json.getInt("i");
+                        if (msgIndex == 0) {
+                            this.msgIndex = msgIndex;
+                        } else {
+                            this.msgIndex++;
+                            if (this.msgIndex != msgIndex) {
+                                // If we have missed a message for some reason,
+                                // ingore this changeset and repaint the whole
+                                // view
+                                VConsole.error("Missed a message -> repaint all...");
+                                endRequest();
+                                repaintAll();
+                                getConnectionGuard().responseHandled();
+                                return;
+                            }
+                        }
+
                         if (applicationRunning) {
                             handleUIDLMessage(start, message, json);
                         } else {

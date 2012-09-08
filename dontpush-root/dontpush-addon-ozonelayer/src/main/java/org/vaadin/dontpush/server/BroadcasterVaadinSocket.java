@@ -70,6 +70,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     };
 
     private Window window;
+    private int msgId;
 
     public BroadcasterVaadinSocket(Broadcaster resource,
             SocketCommunicationManager cm, Window window2) {
@@ -110,18 +111,25 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                     + " the client in sync.");
             return;
         }
-
+        
         final Application application = window.getApplication();
 
         if (application != null && !application.isRunning()) {
+            msgId = 0;
             String logoutUrl = application.getLogoutURL();
             if (logoutUrl == null) {
                 logoutUrl = application.getURL().toString();
             }
             final String msg = "\"redirect\": {\"url\": \"" + logoutUrl
-                    + "\"}" + SocketApplicationConnection.MSG_TERMINATION_STRING;
+                    + "\"}" + getIdxJsonSnippet() + SocketApplicationConnection.MSG_TERMINATION_STRING;
             this.resource.broadcast(msg);
             return;
+        }
+        
+        if(repaintAll) {
+            msgId = 0;
+        } else {
+            msgId++;
         }
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -134,6 +142,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             this.logger.error(e.getMessage(), e);
         } finally {
             if (out != null) {
+                out.print(getIdxJsonSnippet());
                 out.print(SocketApplicationConnection.MSG_TERMINATION_STRING);
                 out.flush();
                 out.close();
@@ -166,6 +175,10 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             this.jsonLogger.trace("Sent " + sent + " bytes of JSON to " + ip
               + ":\n" + new String(byteArray));
         }
+    }
+
+    private String getIdxJsonSnippet() {
+        return ", i:"+msgId;
     }
 
     private int getValidSplitPoint(int sent, int bufsize, byte[] byteArray) {
