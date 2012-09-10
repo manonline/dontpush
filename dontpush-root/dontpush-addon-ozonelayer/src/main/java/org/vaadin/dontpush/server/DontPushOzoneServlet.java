@@ -16,8 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.service.ApplicationContext;
 import com.vaadin.terminal.gwt.server.ApplicationServlet;
+import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.ui.Window;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -25,6 +29,7 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -69,6 +74,19 @@ public class DontPushOzoneServlet extends ApplicationServlet {
             session.setAttribute(WebApplicationContext.class.getName(), cx);
         }
         return cx;
+    }
+    
+    @Override
+    protected void writeAjaxPageHtmlVaadinScripts(Window window,
+            String themeName, Application application, BufferedWriter page,
+            String appUrl, String themeUri, String appId,
+            HttpServletRequest request) throws ServletException, IOException {
+        super.writeAjaxPageHtmlVaadinScripts(window, themeName, application, page,
+                appUrl, themeUri, appId, request);
+        DontPushOzoneWebApplicationContext context = (DontPushOzoneWebApplicationContext) application.getContext();
+        SocketCommunicationManager applicationManager = (SocketCommunicationManager) context.getApplicationManager(application, this);
+        String id = applicationManager.getId();
+        page.write("<script type='text/javascript'>vaadin.vaadinConfigurations['"+appId+"'].cmid = '"+id+"';</script>");
     }
 
     @Override

@@ -228,6 +228,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
             }
 
             url += getConfiguration().getInitialWindowName();
+            url += "?w="+getConfiguration().getInitialWindowName()+"&cmid="+getCmId(getConfiguration().getRootPanelId());
             VConsole.log(url);
 
             VConsole.log("Creating atmosphere client...");
@@ -238,6 +239,11 @@ public class SocketApplicationConnection extends ApplicationConnection {
         }
         return this.ws;
     }
+
+    private final native String getCmId(String string) 
+    /*-{
+        return $wnd.vaadin.vaadinConfigurations[string]['cmid'];
+    }-*/;
 
     @Override
     public void start() {

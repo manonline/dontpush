@@ -16,6 +16,18 @@
 
 package org.vaadin.dontpush.server;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Executor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.Application;
 import com.vaadin.Application.WindowDetachEvent;
 import com.vaadin.Application.WindowDetachListener;
@@ -24,20 +36,6 @@ import com.vaadin.terminal.Paintable.RepaintRequestEvent;
 import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Window;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author mattitahvonen
@@ -57,11 +55,14 @@ public class SocketCommunicationManager extends CommunicationManager implements
     private Runnable pendingPaint;
     private final Set<Window> detachedwindows = new HashSet<Window>();
     private Executor executor;
+    
+    private static Map<String, SocketCommunicationManager> idToMgr = Collections.synchronizedMap(new HashMap<String, SocketCommunicationManager>());
 
     public SocketCommunicationManager(Application application) {
         super(application);
         id = UUID.randomUUID().toString();
         application.addListener(this);
+        idToMgr.put(id, this);
     }
 
     public String getId() {
@@ -169,6 +170,7 @@ public class SocketCommunicationManager extends CommunicationManager implements
             VaadinWebSocket vaadinWebSocket = windowToSocket.get(w);
             vaadinWebSocket.destroy();
         }
+        idToMgr.remove(id);
     }
 
     void cleanDetachedWindows() {
@@ -198,5 +200,9 @@ public class SocketCommunicationManager extends CommunicationManager implements
 
     public void setExecutor(Executor executor) {
         this.executor = executor;
+    }
+
+    public static SocketCommunicationManager get(String cmId) {
+        return idToMgr.get(cmId);
     }
 }
