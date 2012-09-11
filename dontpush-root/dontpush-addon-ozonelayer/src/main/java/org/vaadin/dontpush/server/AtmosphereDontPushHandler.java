@@ -16,8 +16,9 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.ui.Window;
+
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,40 +30,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
 import org.atmosphere.util.SimpleBroadcaster;
 
-import com.vaadin.ui.Window;
-
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
-
-    private static final BroadcasterCache DUMMY_CACHE = new BroadcasterCache() {
-        @Override
-        public void start() {
-        }
-
-        @Override
-        public void stop() {
-        }
-
-        @Override
-        public void addToCache(String id, AtmosphereResource r, Object e) {
-        }
-
-        @Override
-        public List<Object> retrieveFromCache(String id, AtmosphereResource r) {
-            return Collections.EMPTY_LIST;
-        }
-
-    };
 
     private Class<BroadcasterVaadinSocket> socketClass;
     private final Map<GwtAtmosphereResource, BroadcasterVaadinSocket> resourceSocketMap = new WeakHashMap<GwtAtmosphereResource, BroadcasterVaadinSocket>();
@@ -191,7 +168,6 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             factory.remove(bc, key);
             bc = factory.lookup(SimpleBroadcaster.class, key, true);
         }
-        bc.getBroadcasterConfig().setBroadcasterCache(DUMMY_CACHE);
 
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(
