@@ -16,15 +16,10 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -35,6 +30,12 @@ import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.dontpush.widgetset.client.SocketApplicationConnection;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -135,7 +136,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         PrintWriter out = null;
         try {
-            out = new PrintWriter(os);
+            out = new PrintWriter(new OutputStreamWriter(os, "UTF-8"));
             this.cm.writeUidlResponce(this.callBack, repaintAll, out,
                     this.window, analyzeLayouts);
         } catch (Exception e) {
