@@ -33,6 +33,7 @@ import javax.servlet.http.HttpSession;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
@@ -168,6 +169,9 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             factory.remove(bc, key);
             bc = factory.lookup(SimpleBroadcaster.class, key, true);
         }
+        BroadcasterCache cache = bc.getBroadcasterConfig().getBroadcasterCache();
+        if (cache == null || !DontPushBroadcasterCache.class.isAssignableFrom(cache.getClass()))
+            bc.getBroadcasterConfig().setBroadcasterCache(new DontPushBroadcasterCache());
 
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(
