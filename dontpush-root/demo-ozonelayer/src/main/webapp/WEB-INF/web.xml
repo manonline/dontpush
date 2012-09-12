@@ -25,7 +25,7 @@
         <init-param>
             <!-- prevent message loss -->
             <param-name>org.atmosphere.cpr.broadcasterCacheClass</param-name>
-            <param-value>org.atmosphere.cache.HeaderBroadcasterCache</param-value>
+            <param-value>org.vaadin.dontpush.server.DontPushBroadcasterCache</param-value>
         </init-param>
 		<load-on-startup>1</load-on-startup>
 		<!--Uncomment if you want to use Servlet 3.0 Async Support -->
