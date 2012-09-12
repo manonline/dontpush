@@ -22,11 +22,6 @@
 			<param-name>org.atmosphere.disableOnStateEvent</param-name>
 			<param-value>true</param-value>
 		</init-param>
-        <init-param>
-            <!-- prevent message loss -->
-            <param-name>org.atmosphere.cpr.broadcasterCacheClass</param-name>
-            <param-value>org.vaadin.dontpush.server.DontPushBroadcasterCache</param-value>
-        </init-param>
 		<load-on-startup>1</load-on-startup>
 		<!--Uncomment if you want to use Servlet 3.0 Async Support -->
 		<async-supported>true</async-supported>
