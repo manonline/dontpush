@@ -33,12 +33,10 @@ import javax.servlet.http.HttpSession;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter;
 import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
-import org.atmosphere.util.SimpleBroadcaster;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
@@ -164,14 +162,11 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
         final BroadcasterFactory factory = DefaultBroadcasterFactory
                 .getDefault();
-        Broadcaster bc = factory.lookup(SimpleBroadcaster.class, key, true);
+        Broadcaster bc = factory.lookup(DontPushBroadcaster.class, key, true);
         if (bc.isDestroyed()) { // handle case of window detach then re-attach
             factory.remove(bc, key);
-            bc = factory.lookup(SimpleBroadcaster.class, key, true);
+            bc = factory.lookup(DontPushBroadcaster.class, key, true);
         }
-        BroadcasterCache cache = bc.getBroadcasterConfig().getBroadcasterCache();
-        if (cache == null || !DontPushBroadcasterCache.class.isAssignableFrom(cache.getClass()))
-            bc.getBroadcasterConfig().setBroadcasterCache(new DontPushBroadcasterCache());
 
         resource.getAtmosphereResource().setBroadcaster(bc);
         resource.getAtmosphereResource().addEventListener(
