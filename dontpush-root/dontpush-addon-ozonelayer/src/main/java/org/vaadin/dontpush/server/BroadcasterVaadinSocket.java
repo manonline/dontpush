@@ -240,8 +240,8 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                         if (success) {
                             paintChanges(repaintAll, analyzeLayouts);
                         }
-                    } catch (IOException e) {
-                        this.logger.error(e.getMessage(), e);
+                    } catch (Throwable t) {
+                        this.logger.error("Error during paint: " + t.getMessage(), t);
                     }
                 } finally {
                     context.trxEnd(cm.getApplication(), resource);
