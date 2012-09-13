@@ -18,10 +18,13 @@ package org.vaadin.dontpush.server;
 
 import com.vaadin.ui.Window;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import javax.servlet.ServletConfig;
@@ -37,11 +40,15 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.gwt.server.AtmosphereGwtHandler;
 import org.atmosphere.gwt.server.GwtAtmosphereResource;
+import org.atmosphere.gwt.server.SerializationException;
+import org.atmosphere.gwt.shared.Constants;
+import org.atmosphere.gwt.shared.SerialMode;
 
 public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
     private Class<BroadcasterVaadinSocket> socketClass;
     private final Map<GwtAtmosphereResource, BroadcasterVaadinSocket> resourceSocketMap = new WeakHashMap<GwtAtmosphereResource, BroadcasterVaadinSocket>();
+    private final Map<GwtAtmosphereResource, SerialMode> resourceSerialModeMap = new WeakHashMap<GwtAtmosphereResource, SerialMode>();
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -63,14 +70,27 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         }
     }
 
-    private void cleanup(GwtAtmosphereResource resource) {
-        this.resourceSocketMap.remove(resource);
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace("Have " + this.resourceSocketMap.size()
-                    + " sockets after removal of resource `"
-                    + resource.getConnectionID() + "'");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cometTerminated(GwtAtmosphereResource cometResponse, boolean serverInitiated) {
+        Set<GwtAtmosphereResource> resources = new HashSet<GwtAtmosphereResource>(this.resourceSocketMap.keySet());
+        for (GwtAtmosphereResource resource : resources) {
+            if (resource.getConnectionID() == cometResponse.getConnectionID()) {
+                this.resourceSocketMap.remove(resource);
+            }
         }
-        // other cleanup???
+        resources = new HashSet<GwtAtmosphereResource>(this.resourceSerialModeMap.keySet());
+        for (GwtAtmosphereResource resource : resources) {
+            if (resource.getConnectionID() == cometResponse.getConnectionID()) {
+                this.resourceSerialModeMap.remove(resource);
+            }
+        }
+
+        this.logger.debug("Have " + this.resourceSocketMap.size()
+          + " sockets after removal of resource `"
+          + cometResponse.getConnectionID() + "'");
     }
 
     @Override
@@ -193,13 +213,11 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
                     public void onDisconnect(AtmosphereResourceEvent event) {
                         logger.debug("connection disconnected; cleaning up");
-                        cleanup(resource);
                     }
 
                     public void onThrowable(AtmosphereResourceEvent event) {
                         logger.debug("connection thre exception; cleaning up",
                                 event.throwable());
-                        cleanup(resource);
                     }
                 });
 
@@ -238,16 +256,111 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     @Override
     protected void reapResources() {
         super.reapResources();
-        for (Iterator<GwtAtmosphereResource> iter = this.resourceSocketMap
-                .keySet().iterator(); iter.hasNext();) {
-            GwtAtmosphereResource resource = iter.next();
+        for (GwtAtmosphereResource resource : this.resourceSocketMap.keySet()) {
             if (!resource.isAlive()) {
-                iter.remove();
+                this.resourceSocketMap.remove(resource);
             }
         }
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace("Have " + this.resourceSocketMap.size()
-                    + " resources after reaping the dead.");
+        for (GwtAtmosphereResource resource : this.resourceSerialModeMap.keySet()) {
+            if (!resource.isAlive()) {
+                this.resourceSerialModeMap.remove(resource);
+            }
         }
+        this.logger.debug("Have " + this.resourceSocketMap.size()
+          + " resources after reaping the dead.");
+    }
+
+    @Override
+    protected void doServerMessage(HttpServletRequest request, HttpServletResponse response, int connectionID)
+      throws IOException{
+        BufferedReader data = request.getReader();
+        List<Object> postMessages = new ArrayList<Object>();
+        GwtAtmosphereResource resource = lookupResource(connectionID);
+        if (resource == null) {
+            return;
+        }
+
+        final SerialMode serialMode = this.getSerialMode(resource);
+
+        try {
+            while (true) {
+                String event = data.readLine();
+                if (event == null) {
+                    break;
+                }
+                String action = data.readLine();
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace("[" + connectionID + "] Server message received: " + event + ";" + action);
+                }
+                if (event.equals("o") || event.equals("s")) {
+                    int length = Integer.parseInt(data.readLine());
+                    char[] messageData = new char[length];
+                    int totalRead = 0;
+                    int read = 0;
+                    while ((read = data.read(messageData, totalRead, length - totalRead)) != -1) {
+                        totalRead += read;
+                        if (totalRead == length) {
+                            break;
+                        }
+                    }
+                    if (totalRead != length) {
+                        throw new IllegalStateException("Corrupt message received");
+                    }
+                    Object message = null;
+                    if (event.equals("o")) {
+                        try {
+                            message = deserialize(messageData, serialMode);
+                        } catch (SerializationException ex) {
+                            logger.error("Failed to deserialize message", ex);
+                        }
+                    } else {
+                        message = String.copyValueOf(messageData);
+                    }
+                    if (message != null) {
+                        if (action.equals("p")) {
+                            postMessages.add(message);
+                        } else if (action.equals("b")) {
+                            broadcast(message, resource);
+                        }
+                    }
+                } else if (event.equals("c")) {
+                    if (action.equals("d")) {
+                        disconnect(resource);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("[" + connectionID + "] Failed to read", ex);
+        }
+
+        if (postMessages.size() > 0) {
+            post(request, response, postMessages, resource);
+        }
+    }
+
+    private SerialMode getSerialMode(GwtAtmosphereResource resource) {
+        SerialMode serialMode = this.resourceSerialModeMap.get(resource);
+        if (resource.isAlive()) {
+            String mode = resource.getRequest().getParameter(Constants.CLIENT_SERIALZE_MODE_PARAMETER);
+            if (mode != null)
+                serialMode = SerialMode.valueOf(mode);
+        }
+        if (serialMode == null)
+            serialMode = this.getDefaultSerialMode();
+
+        this.resourceSerialModeMap.put(resource, serialMode);
+
+        return serialMode;
+    }
+
+    /**
+     * <p>
+     * Specifies the default {@link SerialMode} for this {@link org.atmosphere.cpr.AtmosphereHandler}.  This value is used if no
+     * serial mode parameter is sent with the suspended request.
+     * @return default {@link SerialMode} if not specified in the suspended request's parameter map
+     */
+    protected SerialMode getDefaultSerialMode() {
+        return SerialMode.PLAIN;
     }
 }
