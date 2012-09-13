@@ -37,7 +37,7 @@ import org.atmosphere.gwt.shared.SerialMode;
 
 /**
  * Uses WebSockets instead of XHR's for communicating with server.
- * 
+ *
  * @author mattitahvonen
  */
 public class SocketApplicationConnection extends ApplicationConnection {
@@ -50,6 +50,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         StringBuilder msg = new StringBuilder();
         boolean msgOpen;
+        private int msgIndex;
 
         public void onConnected(int heartbeat, int connectionID) {
             VConsole.log("WS Connected");
@@ -129,6 +130,24 @@ public class SocketApplicationConnection extends ApplicationConnection {
                     try {
                         VConsole.log("Received socket message...");
                         ValueMap json = evaluateUIDL(message);
+
+                        int msgIdx = json.getInt("i");
+                        if (msgIdx == 0) {
+                            this.msgIndex = msgIdx;
+                        } else {
+                            this.msgIndex++;
+                            if (this.msgIndex != msgIdx) {
+                                // If we have missed a message for some reason,
+                                // ingore this changeset and repaint the whole
+                                // view
+                                VConsole.error("Missed a message -> repaint all...");
+                                endRequest();
+                                repaintAll();
+                                getConnectionGuard().responseHandled();
+                                return;
+                            }
+                        }
+
                         if (applicationRunning) {
                             handleUIDLMessage(start, message, json);
                         } else {
@@ -221,7 +240,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
         return this.ws;
     }
 
-    private final native String getCmId(String string) 
+    private final native String getCmId(String string)
     /*-{
         return $wnd.vaadin.vaadinConfigurations[string]['cmid'];
     }-*/;

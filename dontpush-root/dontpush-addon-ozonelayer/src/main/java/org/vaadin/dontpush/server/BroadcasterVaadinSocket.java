@@ -16,6 +16,12 @@
 
 package org.vaadin.dontpush.server;
 
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,12 +36,6 @@ import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.dontpush.widgetset.client.SocketApplicationConnection;
-
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
@@ -71,6 +71,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
     };
 
     private Window window;
+    private int msgId;
 
     public BroadcasterVaadinSocket(Broadcaster resource,
             SocketCommunicationManager cm, Window window2) {
@@ -115,14 +116,21 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         final Application application = window.getApplication();
 
         if (application != null && !application.isRunning()) {
+            msgId = 0;
             String logoutUrl = application.getLogoutURL();
             if (logoutUrl == null) {
                 logoutUrl = application.getURL().toString();
             }
             final String msg = "\"redirect\": {\"url\": \"" + logoutUrl
-                    + "\"}" + SocketApplicationConnection.MSG_TERMINATION_STRING;
+                    + "\"}" + getIdxJsonSnippet() + SocketApplicationConnection.MSG_TERMINATION_STRING;
             this.resource.broadcast(msg);
             return;
+        }
+
+        if(repaintAll) {
+            msgId = 0;
+        } else {
+            msgId++;
         }
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -135,6 +143,7 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             this.logger.error(e.getMessage(), e);
         } finally {
             if (out != null) {
+                out.print(getIdxJsonSnippet());
                 out.print(SocketApplicationConnection.MSG_TERMINATION_STRING);
                 out.flush();
                 out.close();
@@ -167,6 +176,10 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             this.jsonLogger.trace("Sent " + sent + " bytes of JSON to " + ip
               + ":\n" + new String(byteArray));
         }
+    }
+
+    private String getIdxJsonSnippet() {
+        return ", \"i\":" + msgId;
     }
 
     private int getValidSplitPoint(int sent, int bufsize, byte[] byteArray) {
