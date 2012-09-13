@@ -130,6 +130,7 @@ public class DontPushOzoneWebApplicationContext extends WebApplicationContext {
         if (mgr != null) {
             mgr.destroy();
         }
+        mgrs.remove(mgr);
         super.removeApplication(application);
     }
 }
