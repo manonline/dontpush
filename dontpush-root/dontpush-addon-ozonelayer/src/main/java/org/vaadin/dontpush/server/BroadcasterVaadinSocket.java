@@ -113,6 +113,11 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
             return;
         }
 
+        if (!resource.getAtmosphereResources().iterator().next().isSuspended()) {
+            logger.debug("Request has been cancelled; cannot paint changes.");
+            return;
+        }
+
         final Application application = window.getApplication();
 
         if (application != null && !application.isRunning()) {
