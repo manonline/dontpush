@@ -88,6 +88,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         public void onRefresh() {
             VConsole.log("DEBUG: onRefresh");
+            
         }
 
         public void onAfterRefresh() {
@@ -120,9 +121,6 @@ public class SocketApplicationConnection extends ApplicationConnection {
                         startRequest();
                         VConsole.log("Changeset pushed by the server");
                     }
-                    // TODO add some sort of sequence number so we could check
-                    // whether this was really anwer to out request or message
-                    // pushed by server
                     ownRequestPending = false;
                     message += "}";
                     msg = new StringBuilder();
