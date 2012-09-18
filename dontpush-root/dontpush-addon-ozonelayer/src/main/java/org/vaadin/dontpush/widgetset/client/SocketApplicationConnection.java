@@ -88,7 +88,7 @@ public class SocketApplicationConnection extends ApplicationConnection {
 
         public void onRefresh() {
             VConsole.log("DEBUG: onRefresh");
-            
+
         }
 
         public void onAfterRefresh() {
@@ -229,14 +229,27 @@ public class SocketApplicationConnection extends ApplicationConnection {
             url += "?w="+getConfiguration().getInitialWindowName()+"&cmid="+getCmId(getConfiguration().getRootPanelId());
             VConsole.log(url);
 
-            VConsole.log("Creating atmosphere client...");
-            this.ws = new AtmosphereClient(url, serializer, _cb, true);
+            boolean tryWebSockets = readFromPage();
+            String wsMsg = "with";
+            if (!tryWebSockets)
+                wsMsg += "out";
+            wsMsg += " web sockets";
+            VConsole.log("Creating atmosphere client " + wsMsg + "...");
+            this.ws = new AtmosphereClient(url, serializer, _cb, tryWebSockets);
             VConsole.log("...starting...");
 
             this.ws.start();
         }
         return this.ws;
     }
+
+    private final native boolean readFromPage()
+    /*-{
+        if ($wnd.ozonelayerTryWebSockets == undefined) {
+            $wnd.ozonelayerTryWebSockets = true;
+        }
+        return $wnd.ozonelayerTryWebSockets;
+    }-*/;
 
     private final native String getCmId(String string)
     /*-{
