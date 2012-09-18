@@ -17,9 +17,7 @@
 package org.vaadin.dontpush.server;
 
 import com.vaadin.Application;
-import com.vaadin.service.ApplicationContext;
 import com.vaadin.terminal.gwt.server.ApplicationServlet;
-import com.vaadin.terminal.gwt.server.CommunicationManager;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.ui.Window;
 
@@ -29,7 +27,6 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -75,7 +72,7 @@ public class DontPushOzoneServlet extends ApplicationServlet {
         }
         return cx;
     }
-    
+
     @Override
     protected void writeAjaxPageHtmlVaadinScripts(Window window,
             String themeName, Application application, BufferedWriter page,
@@ -99,6 +96,11 @@ public class DontPushOzoneServlet extends ApplicationServlet {
             page.write("<script type=\"text/javascript\">ozonelayerConnectionGuardTimeout = "
                     + to + ";</script>");
         }
+        String tryWebSockets = getApplicationProperty("tryWebSockets");
+        if (tryWebSockets == null)
+            tryWebSockets = "true";
+        page.write("<script type=\"text/javascript\">ozonelayerTryWebSockets = "
+          + Boolean.parseBoolean(tryWebSockets) + ";</script>");
     }
 
 }
