@@ -134,6 +134,12 @@ VERSION 0.4.6
 VERSION 0.4.9
  * Fix newline handling
 
-VERSION 0.5.0
- * Upgraded to Atmosphere 1.0.0.beta4.  Add-on will now only support Atmosphere 1.0.x.
+VERSION 1.0.0
+ * Upgraded to Atmosphere 1.0.0
+ * Bugfixes
+ 
+VERSION 1.0.1
+ * Packaging fix (wrong gwt dependency)
+ * Ability to directly guide browsers for comet, faster startup if developer knows websockets cannot be used
+ 
 
