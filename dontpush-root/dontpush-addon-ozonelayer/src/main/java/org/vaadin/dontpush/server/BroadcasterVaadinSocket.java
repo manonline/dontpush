@@ -265,8 +265,12 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         browser.updateClientSideDetails(params);
     }
 
+    @Override
     public void destroy() {
-        resource.destroy();
+        for (AtmosphereResource res : this.resource.getAtmosphereResources()) {
+            if (res.isSuspended() && !res.isResumed() && !res.isCancelled()) {
+                res.resume();
+            }
+        }
     }
-
 }
