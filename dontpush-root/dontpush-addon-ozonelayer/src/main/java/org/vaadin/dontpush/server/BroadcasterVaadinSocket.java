@@ -16,12 +16,6 @@
 
 package org.vaadin.dontpush.server;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
-import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
-import com.vaadin.ui.Window;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,10 +26,17 @@ import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.dontpush.widgetset.client.SocketApplicationConnection;
+
+import com.vaadin.Application;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Callback;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Request;
+import com.vaadin.terminal.gwt.server.AbstractCommunicationManager.Response;
+import com.vaadin.ui.Window;
 
 public class BroadcasterVaadinSocket implements VaadinWebSocket {
 
