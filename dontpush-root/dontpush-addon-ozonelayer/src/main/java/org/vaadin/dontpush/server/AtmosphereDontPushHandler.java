@@ -49,6 +49,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     private Class<BroadcasterVaadinSocket> socketClass;
     private final Map<GwtAtmosphereResource, BroadcasterVaadinSocket> resourceSocketMap = new WeakHashMap<GwtAtmosphereResource, BroadcasterVaadinSocket>();
     private final Map<GwtAtmosphereResource, SerialMode> resourceSerialModeMap = new WeakHashMap<GwtAtmosphereResource, SerialMode>();
+    private final Set<GwtAtmosphereResource> resourcesProcessingData = new HashSet<GwtAtmosphereResource>();
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -257,8 +258,10 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
     protected void reapResources() {
         super.reapResources();
         for (GwtAtmosphereResource resource : this.resourceSocketMap.keySet()) {
-            if (!resource.isAlive()) {
-                this.resourceSocketMap.remove(resource);
+            synchronized (this.resourcesProcessingData) {
+                if (!resource.isAlive() && !this.resourcesProcessingData.contains(resource)) {
+                    this.resourceSocketMap.remove(resource);
+                }
             }
         }
         for (GwtAtmosphereResource resource : this.resourceSerialModeMap.keySet()) {
@@ -283,6 +286,9 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         final SerialMode serialMode = this.getSerialMode(resource);
 
         try {
+            synchronized (this.resourcesProcessingData) {
+                this.resourcesProcessingData.add(resource);
+            }
             while (true) {
                 String event = data.readLine();
                 if (event == null) {
@@ -297,7 +303,7 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
                     int length = Integer.parseInt(data.readLine());
                     char[] messageData = new char[length];
                     int totalRead = 0;
-                    int read = 0;
+                    int read;
                     while ((read = data.read(messageData, totalRead, length - totalRead)) != -1) {
                         totalRead += read;
                         if (totalRead == length) {
@@ -332,6 +338,10 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
             }
         } catch (IOException ex) {
             logger.error("[" + connectionID + "] Failed to read", ex);
+        } finally {
+            synchronized (this.resourcesProcessingData) {
+                this.resourcesProcessingData.remove(resource);
+            }
         }
 
         if (postMessages.size() > 0) {
