@@ -127,7 +127,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         SocketCommunicationManager cm = null;
         String path = resource.getRequest().getPathInfo();
         String windowName = "null";
-        if (path == null) {
+        String transport = resource.getRequest().getParameter("tr");
+        if (path == null || "IEXDomainRequest".equals(transport)) {
             // Glassfish haxies, pathinfo dont work, session dont work
             String queryString = resource.getRequest().getQueryString();
             if (queryString != null && queryString.contains("w=")) {

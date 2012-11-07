@@ -10,7 +10,7 @@
 	<description>dontpush add-on based on atmosphere library</description>
 
 	<properties>
-		<atmosphere.version>1.0.2</atmosphere.version>
+		<atmosphere.version>1.0.4</atmosphere.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
