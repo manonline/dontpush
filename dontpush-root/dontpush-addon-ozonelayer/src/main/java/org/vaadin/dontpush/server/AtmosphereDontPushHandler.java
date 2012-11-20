@@ -184,7 +184,13 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
 
         final BroadcasterFactory factory = DefaultBroadcasterFactory
                 .getDefault();
-        Broadcaster bc = factory.lookup(DontPushBroadcaster.class, key, true);
+        Broadcaster bc = factory.lookup(key);
+        if (bc == null) {
+            bc = factory.lookup(DontPushBroadcaster.class, key, true);
+        } else if (!DontPushBroadcaster.class.isAssignableFrom(bc.getClass())) {
+            bc.destroy();
+            bc = factory.lookup(DontPushBroadcaster.class, key, true);
+        }
         if (bc.isDestroyed()) { // handle case of window detach then re-attach
             factory.remove(bc, key);
             bc = factory.lookup(DontPushBroadcaster.class, key, true);
@@ -227,6 +233,8 @@ public class AtmosphereDontPushHandler extends AtmosphereGwtHandler {
         if (socket == null) {
             socket = createSocket(bc, cm, window);
             cm.setSocket(socket, window);
+        } else {
+            socket.setResource(bc);
         }
 
         this.resourceSocketMap.put(resource, (BroadcasterVaadinSocket) socket);

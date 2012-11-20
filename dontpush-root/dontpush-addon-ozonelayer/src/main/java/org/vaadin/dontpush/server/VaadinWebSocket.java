@@ -18,6 +18,8 @@ package org.vaadin.dontpush.server;
 
 import java.io.IOException;
 
+import org.atmosphere.cpr.Broadcaster;
+
 /**
  * Interface for SocketCommunicationManager. Each app server adapter needs an implementation of this.
  *
@@ -29,4 +31,5 @@ public interface VaadinWebSocket {
 
     void destroy();
 
+    void setResource(Broadcaster broadcaster);
 }
