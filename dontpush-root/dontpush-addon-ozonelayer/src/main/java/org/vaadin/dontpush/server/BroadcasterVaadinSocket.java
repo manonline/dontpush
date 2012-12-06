@@ -170,9 +170,8 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
         }
         if (this.isJSONLoggingEnabled() && this.jsonLogger.isTraceEnabled()) {
 
-            HttpServletRequest req =
-              ((HttpServletRequest)resource.getAtmosphereResources()
-                .iterator().next().getRequest());
+            HttpServletRequest req = this.resource.getAtmosphereResources()
+                .iterator().next().getRequest();
             String ip = "unknown client";
             if (req != null) {
                 ip = req.getHeader("X-Forwarded-For");
