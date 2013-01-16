@@ -242,9 +242,11 @@ public class BroadcasterVaadinSocket implements VaadinWebSocket {
                     }
 
                     try {
-                        if (success) {
-                            paintChanges(repaintAll, analyzeLayouts);
+                        if (!success) {
+                            this.cm.makeAllPaintablesDirty(this.window);
+                            repaintAll = true;
                         }
+                        paintChanges(repaintAll, analyzeLayouts);
                     } catch (Throwable t) {
                         this.logger.error("Error during paint: " + t.getMessage(), t);
                     }
